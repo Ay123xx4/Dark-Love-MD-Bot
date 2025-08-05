@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: Ghost-MD 
-    env: docker
+    name: Dark-Love-MD-Bot
+    env: MONGO_URI
     region: Frankfurt
     plan: free
-    dockerfilePath: Dockerfile
+    nodePath: Node

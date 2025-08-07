@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: Dark-Love-MD-Bot
-    env: MONGO_URI
-    region: Frankfurt
-    plan: free
-    nodePath: Node

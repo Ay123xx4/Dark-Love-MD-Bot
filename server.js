@@ -19,8 +19,13 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Your existing routes and middleware go here
 
+app.get("/", (req, res) => {
+    res.redirect("/login");
+});
+
 app.listen(PORT, () => {
   console.log(`🟢 Server running on port ${PORT}`);
 });
+
 
 

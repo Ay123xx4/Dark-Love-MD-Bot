@@ -1,19 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const mongoose = require('mongoose');
-const path = require('path');
-const bodyParser = require('body-parser');
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-console.log("🟢 Starting server");
+dotenv.config();
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => {
-    console.error("❌ MongoDB connect error:", err.message);
-    process.exit(1);
-  });
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// ...rest of your express setup...
+// Connect to MongoDB using the MONGO_URI environment variable
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log("✅ MongoDB connected successfully");
+}).catch((err) => {
+  console.error("❌ MongoDB connect error:", err.message);
+});
+
+// Your existing routes and middleware go here
+
+app.listen(PORT, () => {
+  console.log(`🟢 Server running on port ${PORT}`);
+});

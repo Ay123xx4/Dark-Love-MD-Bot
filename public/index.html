@@ -1,74 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Show Text Example</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-    *{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    color: #333;
-    padding: 20px;
-}
-
-.content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.hidden-text {
-    display: none; /* Initially hide the text */
-    margin-top: 10px;
-}
-
-button {
-    margin-top: 20px;
-    padding: 10px 15px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-     </style>
+  <meta charset="utf-8" />
+  <title>Login - Dark Love MD</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-    <div class="content">
-        <h1>Welcome to Dark-Love-MD</h1>
-        <p>This is some existing content on the page.</p>
-        <!-- Hidden text that will be revealed -->
-        <div id="additionalText" class="hidden-text">
-            <p>This is the additional text that you can now see!</p>
-        </div>
-        <button id="revealButton">Show More Text</button>
+  <main class="auth-wrap">
+    <div class="card">
+      <h2>Welcome back</h2>
+      <form id="loginForm">
+        <input name="usernameOrEmail" placeholder="Username or email" required />
+        <input name="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p class="muted">No account? <a href="/signup">Sign up</a></p>
+      <p id="msg" class="msg"></p>
     </div>
-    
-    <script>
-    document.getElementById('revealButton').addEventListener('click', function() {
-    // Get the hidden text element
-    var additionalText = document.getElementById('additionalText');
-    
-    // Check if the current display property is 'none'
-    if (additionalText.style.display === '' || additionalText.style.display === '') {
-        additionalText.style.display = 'block'; // Show the additional text
-    } else {
-        additionalText.style.display = ''; // Optionally hide it again
-    }
-});
-    </script>
+  </main>
+  <script src="/auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,33 @@
+:root{
+  --bg1:#0f1724; --accent:#25D366; --card:#0f1728; --muted:#9aa2ad;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Inter, system-ui, Arial;
+  background: linear-gradient(135deg,#081229 0%, #071029 60%);
+  color:#e6eef6;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.auth-wrap{width:100%;max-width:420px;padding:24px}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));
+  border-radius:12px;padding:28px;box-shadow:0 6px 30px rgba(2,6,23,0.6);
+  border:1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+.card h2{margin:0 0 10px;font-weight:600}
+.card input{
+  width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;background:#06101a;color:#e6eef6;
+  outline:none;border:1px solid rgba(255,255,255,0.03);
+}
+.card button{
+  width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#042205;font-weight:700;margin-top:8px;cursor:pointer;
+}
+.muted{color:var(--muted);font-size:13px;margin-top:10px}
+.msg{margin-top:8px;color:#ffdddd}
+.topbar{position:fixed;left:0;right:0;top:0;height:60px;background:#061124;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.container{padding:80px 20px 40px}

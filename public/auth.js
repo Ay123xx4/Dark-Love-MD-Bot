@@ -3,7 +3,7 @@ document.getElementById("signupForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   const data = Object.fromEntries(new FormData(form).entries());
-  const res = await fetch("/api/signup", {
+  const res = await fetch("/api/signup.html", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
@@ -32,7 +32,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
   const txt = await res.text();
   const msg = document.getElementById("msg");
   if (res.ok && txt === "ok:logged-in") {
-    window.location.href = "/dashboard";
+    window.location.href = "/dashboard.html";
     return;
   } else {
     msg.style.color = "#ffd6d6";

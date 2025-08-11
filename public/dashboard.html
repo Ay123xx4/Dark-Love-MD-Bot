@@ -1,28 +1,21 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
   <title>Dashboard - Dark Love MD</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <h1>Dark-Love-MD</h1>
-    <nav><a href="/auth/logout">Logout</a></nav>
-  </header>
-  <main class="container">
-    <h2>Welcome to your dashboard</h2>
-    <div id="userInfo"></div>
-    <p>Upload bots and manage them here (protected area)</p>
-    <!-- You can add the bot upload UI here -->
+  <main class="dashboard-wrap">
+    <div class="card">
+      <h2>Upload Bot Repo</h2>
+      <form id="uploadForm">
+        <input type="text" name="repoName" placeholder="Bot Name" required>
+        <input type="url" name="repoLink" placeholder="Repo Link" required>
+        <button type="submit">Upload Bot</button>
+      </form>
+      <p id="msg" class="msg"></p>
+    </div>
   </main>
-  <script>
-    async function loadUser() {
-      const res = await fetch('/api/me');
-      const data = await res.json();
-      document.getElementById('userInfo').innerText = data.loggedIn ? `Logged in as ${data.username}` : 'Not logged in';
-    }
-    loadUser();
-  </script>
+  <script src="dashboard.js"></script>
 </body>
 </html>

@@ -1,21 +1,22 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Dashboard - Dark Love MD</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Bot Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <main class="dashboard-wrap">
-    <div class="card">
-      <h2>Upload Bot Repo</h2>
-      <form id="uploadForm">
-        <input type="text" name="repoName" placeholder="Bot Name" required>
-        <input type="url" name="repoLink" placeholder="Repo Link" required>
-        <button type="submit">Upload Bot</button>
-      </form>
-      <p id="msg" class="msg"></p>
-    </div>
+  <header>
+    <h1>🚀 Public Bot Dashboard</h1>
+    <button id="themeToggle">🌙 Dark Mode</button>
+  </header>
+
+  <main>
+    <input type="text" id="searchInput" placeholder="Search bots...">
+    <div id="botGrid" class="grid"></div>
   </main>
+
   <script src="dashboard.js"></script>
 </body>
 </html>

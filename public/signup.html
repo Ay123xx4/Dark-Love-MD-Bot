@@ -1,27 +1,23 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
   <title>Sign Up - Dark Love MD</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="auth-wrap">
     <div class="card">
-      <h2>Create your account</h2>
+      <h2>Sign Up</h2>
       <form id="signupForm">
-        <input name="username" placeholder="Username" required />
-        <input name="email" type="email" placeholder="Email" required />
-        <input name="password" type="password" placeholder="Password" required />
-        <button type="submit">Sign up</button>
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Sign Up</button>
       </form>
-      <p class="muted">Have an account? <a href="/index.html">Login</a></p>
+      <p class="muted">Already have an account? <a href="index.html">Login</a></p>
       <p id="msg" class="msg"></p>
     </div>
   </main>
-  <script src="/auth.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>
-
-
-

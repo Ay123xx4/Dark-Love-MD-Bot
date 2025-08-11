@@ -1,25 +1,28 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Login - Dark Love MD</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - Dark-Love-MD</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <main class="auth-wrap">
     <div class="card">
       <h2>Welcome back</h2>
-      <form id="indexForm">
+
+      <form id="loginForm" autocomplete="on">
         <input name="usernameOrEmail" placeholder="Username or email" required />
         <input name="password" type="password" placeholder="Password" required />
         <button type="submit">Login</button>
       </form>
-      <p class="muted">No account? <a href="/signup.html">Sign up</a></p>
-      <p id="msg" class="msg"></p>
+
+      <p class="muted">No account? <a href="/signup">Sign up</a></p>
+
+      <p id="msg" class="msg" aria-live="polite"></p>
     </div>
   </main>
+
   <script src="/auth.js"></script>
 </body>
 </html>
-
-

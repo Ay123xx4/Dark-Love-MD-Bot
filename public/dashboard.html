@@ -1,38 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Love MD - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Dashboard - DarkLoveMD</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js" defer></script>
 </head>
-<body class="light-mode">
-    <header>
-        <img src="https://telegra.ph/file/7d7112d331a345d558149.jpg" alt="Dark-Love-MD" class="logo">
-        <h1>Dark Love MD Dashboard</h1>
-        <nav>
-            <button id="themeToggle">Toggle Dark/Light Mode</button>
-            <button id="channelButton">Channel</button>
-        </nav>
-    </header>
-
-    <section class="upload-section">
-        <h2>Upload Your Bot</h2>
-        <form id="uploadBotForm">
-            <input type="text" id="botName" placeholder="Bot Name" required>
-            <input type="url" id="botRepo" placeholder="Repository Link" required>
-            <input type="url" id="botLogo" placeholder="Logo URL" required>
-            <button type="submit">Upload</button>
-        </form>
-        <p id="uploadMessage" class="message"></p>
-    </section>
-
-    <section class="bot-grid" id="botGrid">
-        <!-- Bots will be loaded here -->
-    </section>
-
-    <script src="script.js"></script>
+<body onload="loadBots()">
+<header>
+  <h2>DarkLoveMD</h2>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="upload.html">Upload</a>
+    <a href="services.html">Services</a>
+    <a href="index.html">Login</a>
+  </nav>
+  <button id="themeToggle" class="toggle-btn">☀️</button>
+</header>
+<div class="container">
+  <h2>All Uploaded Bots</h2>
+  <div class="bot-grid" id="botContainer"></div>
+</div>
 </body>
 </html>
-
-

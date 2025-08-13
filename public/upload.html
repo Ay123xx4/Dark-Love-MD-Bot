@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Bot - DarkLoveMD</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+<header>
+  <h2>DarkLoveMD</h2>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="upload.html">Upload</a>
+    <a href="services.html">Services</a>
+    <a href="index.html">Login</a>
+  </nav>
+  <button id="themeToggle" class="toggle-btn">☀️</button>
+</header>
+<div class="container">
+  <h2>Upload Bot</h2>
+  <form id="uploadForm" onsubmit="uploadBot(event)" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Bot Name" required>
+    <input type="url" name="repoLink" placeholder="Repository Link" required>
+    <input type="file" name="logo" accept="image/*" required>
+    <input type="password" name="password" placeholder="Your Account Password" required>
+    <button type="submit">Upload</button>
+  </form>
+</div>
+</body>
+</html>

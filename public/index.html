@@ -1,22 +1,23 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Login - Dark Love MD</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Love MD - Login</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <main class="auth-wrap">
-    <div class="card">
-      <h2>Login</h2>
-      <form id="loginForm">
-        <input type="text" name="usernameOrEmail" placeholder="Username or Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-      </form>
-      <p class="muted">No account? <a href="signup.html">Sign up</a></p>
-      <p id="msg" class="msg"></p>
+<body class="light-mode">
+    <div class="form-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p id="loginMessage" class="message"></p>
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+        <button id="themeToggle">Toggle Dark/Light Mode</button>
     </div>
-  </main>
-  <script src="auth.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

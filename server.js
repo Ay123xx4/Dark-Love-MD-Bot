@@ -1,168 +1,102 @@
-// server.js
-import express from "express";
-import session from "express-session";
-import MongoStore from "connect-mongo";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import bcrypt from "bcrypt";
-import crypto from "crypto";
-import nodemailer from "nodemailer";
-import User from "./models/User.js";
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import nodemailer from 'nodemailer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import User from './models/User.js';
+import Bot from './models/Bot.js';
 
 dotenv.config();
 const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => console.error(err));
 
-// Sessions
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "devsecret",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 7 days
-  })
-);
-
-// Connect DB
-(async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log("✅ MongoDB connected successfully");
-  } catch (err) {
-    console.error("❌ MongoDB connect error:", err.message);
-    process.exit(1);
-  }
-})();
-
-// Nodemailer transporter (use Gmail app password or SMTP service)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
 });
 
-// ----- Routes -----
-// Serve login page on root
-app.get("/", (req, res) => {
-  res.redirect("/login");
-});
+app.post('/signup', async (req, res) => {
+  const { username, email, password } = req.body;
+  const existingUser = await User.findOne({ email });
+  if (existingUser) return res.status(400).json({ message: 'Email already registered' });
 
-// Signup (frontend posts JSON)
-app.post("/api/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) return res.status(400).send("Missing fields");
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    const exists = await User.findOne({ $or: [{ username }, { email }] });
-    if (exists) return res.status(400).send("User or email already exists");
+  const newUser = new User({ username, email, password: hashedPassword, verified: false, verificationToken });
+  await newUser.save();
 
-    const hashed = await bcrypt.hash(password, 10);
-    const verificationToken = crypto.randomBytes(20).toString("hex");
-
-    const user = await User.create({
-      username,
-      email,
-      password: hashed,
-      verified: false,
-      verificationToken
-    });
-
-    const verifyUrl = `${req.protocol}://${req.get("host")}/verify/${verificationToken}`;
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify your Dark-Love-MD account",
-      html: `<p>Hello ${username},</p>
-             <p>Click to verify your email:</p>
-             <a href="${verifyUrl}">${verifyUrl}</a>
-             <p>If you didn't sign up, ignore this email.</p>`
-    };
-
-    await transporter.sendMail(mailOptions);
-    return res.status(200).send("ok:check-email");
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Server error");
-  }
-});
-
-// Email verification
-app.get("/verify/:token", async (req, res) => {
-  try {
-    const user = await User.findOne({ verificationToken: req.params.token });
-    if (!user) return res.sendFile(path.join(__dirname, "public", "verify-failed.html"));
-
-    user.verified = true;
-    user.verificationToken = undefined;
-    await user.save();
-    return res.sendFile(path.join(__dirname, "public", "verify-success.html"));
-  } catch (err) {
-    console.error(err);
-    return res.sendFile(path.join(__dirname, "public", "verify-failed.html"));
-  }
-});
-
-// Login
-app.post("/api/login", async (req, res) => {
-  try {
-    const { usernameOrEmail, password } = req.body;
-    if (!usernameOrEmail || !password) return res.status(400).send("Missing fields");
-
-    const user = await User.findOne({
-      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
-    });
-
-    if (!user) return res.status(401).send("Username or password is incorrect");
-    if (!user.verified) return res.status(401).send("Please verify your email before logging in");
-
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).send("Username or password is incorrect");
-
-    // Save session
-    req.session.userId = user._id;
-    req.session.username = user.username;
-    return res.status(200).send("ok:logged-in");
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Server error");
-  }
-});
-
-// Logout
-app.get("/auth/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login");
+  const verificationLink = `http://localhost:${process.env.PORT}/verify-email?token=${verificationToken}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Verify your email',
+    html: `<p>Click <a href="${verificationLink}">here</a> to verify your email</p>`
   });
+
+  res.json({ message: 'Signup successful, please verify your email' });
 });
 
-// Protected dashboard page
-app.get("/dashboard", (req, res) => {
-  if (!req.session.userId) return res.redirect("/login");
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+app.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(400).send('Invalid token');
+    user.verified = true;
+    user.verificationToken = null;
+    await user.save();
+    res.send('Email verified! You can now log in.');
+  } catch {
+    res.status(400).send('Invalid or expired token');
+  }
 });
 
-// API to get session user info
-app.get("/api/me", (req, res) => {
-  if (!req.session.userId) return res.json({ loggedIn: false });
-  return res.json({ loggedIn: true, username: req.session.username });
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(400).json({ message: 'Username or password is incorrect' });
+  if (!user.verified) return res.status(400).json({ message: 'Please verify your email first' });
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return res.status(400).json({ message: 'Username or password is incorrect' });
+
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+  res.json({ token });
 });
 
-// Start
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🟢 Server running on port ${PORT}`));
+app.post('/upload-bot', async (req, res) => {
+  const { name, repoLink, logo } = req.body;
+  const bot = new Bot({ name, repoLink, logo });
+  await bot.save();
+  res.json({ message: 'Bot uploaded successfully', bot });
+});
+
+app.get('/bots', async (req, res) => {
+  const bots = await Bot.find();
+  res.json(bots);
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(process.env.PORT, () => console.log(`🟢 Server running on port ${process.env.PORT}`));

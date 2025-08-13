@@ -1,23 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Love MD - Login</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Login - DarkLoveMD</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js" defer></script>
 </head>
-<body class="light-mode">
-    <div class="form-container">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Email" required>
-            <input type="password" id="loginPassword" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p id="loginMessage" class="message"></p>
-        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
-        <button id="themeToggle">Toggle Dark/Light Mode</button>
-    </div>
-    <script src="script.js"></script>
+<body>
+<header>
+  <h2>DarkLoveMD</h2>
+  <nav>
+    <a href="index.html">Login</a>
+    <a href="signup.html">Signup</a>
+  </nav>
+  <button id="themeToggle" class="toggle-btn">☀️</button>
+</header>
+<div class="container">
+  <h2>Login</h2>
+  <form onsubmit="loginUser(event)">
+    <input type="text" id="loginUsername" placeholder="Username" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+</div>
 </body>
 </html>

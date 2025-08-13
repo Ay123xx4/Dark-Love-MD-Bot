@@ -1,63 +1,83 @@
 body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #1e1e2f, #25254b);
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: white;
+    padding: 0;
+    transition: 0.3s ease;
 }
 
-.auth-wrap, .dashboard-wrap {
-    width: 100%;
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --form-bg: #f2f2f2;
+}
+
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --form-bg: #1f1f1f;
+}
+
+.form-container {
     max-width: 400px;
-}
-
-.card {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    margin: 50px auto;
+    padding: 20px;
+    background-color: var(--form-bg);
+    border-radius: 10px;
     text-align: center;
 }
 
 input, button {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+    width: 90%;
+    padding: 10px;
+    margin: 8px 0;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-
-input {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    outline: none;
-}
-
-input::placeholder {
-    color: #ccc;
+    border-radius: 5px;
 }
 
 button {
-    background: #ff4b5c;
+    background: #ff0066;
     color: white;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 button:hover {
-    background: #ff1e3c;
+    background: #cc0052;
 }
 
-.muted {
-    color: #bbb;
-    font-size: 0.9rem;
-}
-
-.msg {
+.message {
     margin-top: 10px;
-    font-size: 0.9rem;
+    font-size: 14px;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: var(--form-bg);
+}
+
+header .logo {
+    height: 50px;
+    margin-right: 15px;
+}
+
+.bot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+.bot-grid .bot-card {
+    background: var(--form-bg);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.bot-card img {
+    max-width: 100%;
+    border-radius: 8px;
 }

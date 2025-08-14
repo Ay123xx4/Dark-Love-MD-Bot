@@ -1,30 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Upload Bot - DarkLoveMD</title>
-  <link rel="stylesheet" href="css/style.css">
-  <script src="js/main.js" defer></script>
+    <meta charset="UTF-8">
+    <title>Upload Bot - Dark-Love-MD</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header>
-  <h2>DarkLoveMD</h2>
-  <nav>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="upload.html">Upload</a>
-    <a href="services.html">Services</a>
-    <a href="index.html">Login</a>
-  </nav>
-  <button id="themeToggle" class="toggle-btn">☀️</button>
+    <div class="logo">Dark-Love-MD</div>
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="upload.html" class="active">Upload</a>
+        <a href="#">Services</a>
+        <a href="#">Policy</a>
+        <a href="https://t.me/DarkLoveMD">Channel</a>
+        <span id="themeToggle" class="theme-btn">🌞</span>
+    </nav>
 </header>
-<div class="container">
-  <h2>Upload Bot</h2>
-  <form id="uploadForm" onsubmit="uploadBot(event)" enctype="multipart/form-data">
-    <input type="text" name="name" placeholder="Bot Name" required>
-    <input type="url" name="repoLink" placeholder="Repository Link" required>
-    <input type="file" name="logo" accept="image/*" required>
-    <input type="password" name="password" placeholder="Your Account Password" required>
-    <button type="submit">Upload</button>
-  </form>
+
+<div class="form-container">
+    <h2>Upload a Bot</h2>
+    <form id="uploadForm">
+        <input type="text" name="name" placeholder="Bot Name" required><br>
+        <input type="url" name="repoUrl" placeholder="Repository URL" required><br>
+        <input type="url" name="logoUrl" placeholder="Logo URL"><br>
+        <textarea name="description" placeholder="Description (optional)"></textarea><br>
+        <input type="password" name="password" placeholder="Your Account Password" required><br>
+        <button type="submit">Upload</button>
+    </form>
+    <p id="msg"></p>
 </div>
+
+<script>
+const token = localStorage.getItem('token');
+if (!token) window.location.href = 'index.html';
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = {
+        name: e.target.name.value,
+        repoUrl: e.target.repoUrl.value,
+        logoUrl: e.target.logoUrl.value,
+        description: e.target.description.value,
+        password: e.target.password.value
+    };
+    const res = await fetch('/upload', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+    });
+    const data = await res.json();
+    document.getElementById('msg').innerText = data.message;
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '🌙' : '🌞';
+});
+</script>
 </body>
 </html>

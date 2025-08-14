@@ -1,89 +1,58 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background: var(--bg-color, #f4f4f4);
-  color: var(--text-color, #333);
-  transition: all 0.3s ease;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
-
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--header-bg, #222);
-  color: white;
-  padding: 10px 20px;
+    background: #333;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
 }
-
-header nav a {
-  color: white;
-  text-decoration: none;
-  margin: 0 10px;
-  font-weight: bold;
+nav a {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
 }
-
-header nav a:hover {
-  text-decoration: underline;
+nav a.active {
+    font-weight: bold;
 }
-
-.container {
-  max-width: 400px;
-  margin: 40px auto;
-  background: var(--form-bg, white);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+.form-container {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #f2f2f2;
+    border-radius: 8px;
 }
-
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
 }
-
-button {
-  background: #4cafef;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #369cdc;
-}
-
-.bot-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-}
-
 .bot-card {
-  background: var(--form-bg, white);
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 15px;
+    border-radius: 5px;
 }
-
 .bot-card img {
-  max-width: 100%;
-  border-radius: 6px;
+    width: 100px;
+    height: 100px;
 }
-
-.toggle-btn {
-  font-size: 20px;
-  background: none;
-  border: none;
-  cursor: pointer;
+.search-bar {
+    text-align: center;
+    margin: 20px;
 }
-
-.dark {
-  --bg-color: #121212;
-  --text-color: #eee;
-  --header-bg: #000;
-  --form-bg: #1e1e1e;
+.theme-btn {
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 10px;
+}
+body.dark {
+    background: #121212;
+    color: white;
+}
+body.dark .form-container {
+    background: #1e1e1e;
 }

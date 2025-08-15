@@ -56,3 +56,24 @@ body.dark {
 body.dark .form-container {
     background: #1e1e1e;
 }
+.verify-container {
+    max-width: 500px;
+    margin: auto;
+    text-align: center;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+.verify-container input {
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+}
+.verify-container button {
+    padding: 10px 15px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+

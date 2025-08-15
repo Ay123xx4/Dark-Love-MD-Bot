@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification Sent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="verify-container">
+        <h2>Email Verification Sent</h2>
+        <p>Check your email to verify your account.</p>
+
+        <input type="email" id="resendEmail" placeholder="Enter your email" />
+        <button onclick="resendEmail()">Resend Verification</button>
+
+        <h3>Change Email</h3>
+        <input type="email" id="oldEmail" placeholder="Old email" />
+        <input type="email" id="newEmail" placeholder="New email" />
+        <button onclick="resetEmail()">Change & Resend</button>
+    </div>
+
+    <script>
+        function resendEmail() {
+            const email = document.getElementById('resendEmail').value;
+            fetch('/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            }).then(res => res.json()).then(data => alert(data.message));
+        }
+
+        function resetEmail() {
+            const oldEmail = document.getElementById('oldEmail').value;
+            const newEmail = document.getElementById('newEmail').value;
+            fetch('/reset-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldEmail, newEmail })
+            }).then(res => res.json()).then(data => alert(data.message));
+        }
+    </script>
+</body>
+</html>

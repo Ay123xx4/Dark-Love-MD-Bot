@@ -1,4 +1,4 @@
-// server.js
+// server.js (Updated)
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -13,7 +13,6 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // User Schema
@@ -25,16 +24,41 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-// Transporter for Nodemailer
+// Nodemailer
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your email service
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
 
-// Signup Route
+// Function to send verification email
+async function sendVerificationEmail(email) {
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '15m' }); // 15 min expiry
+    const verifyLink = `${process.env.BASE_URL}/verify?token=${token}`;
+
+    const htmlEmail = `
+        <div style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; background: white; margin: auto; padding: 20px; border-radius: 8px;">
+                <h2 style="color: #333;">Welcome to Dark-Love-MD</h2>
+                <p>This is where you can see all bot repos and visit them for deployment.</p>
+                <p>Click below to verify your email:</p>
+                <a href="${verifyLink}" style="display: inline-block; background: #007BFF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+                <p style="margin-top: 20px; font-size: 12px; color: #777;">©2025 Dark-Love-MD Bot Platform</p>
+            </div>
+        </div>
+    `;
+
+    await transporter.sendMail({
+        from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Welcome to Dark-Love-MD",
+        html: htmlEmail
+    });
+}
+
+// Signup route
 app.post('/signup', async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -47,36 +71,16 @@ app.post('/signup', async (req, res) => {
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
 
-        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        const verifyLink = `${process.env.BASE_URL}/verify?token=${token}`;
+        await sendVerificationEmail(email);
 
-        const htmlEmail = `
-            <div style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
-                <div style="max-width: 600px; background: white; margin: auto; padding: 20px; border-radius: 8px;">
-                    <h2 style="color: #333;">Welcome to Dark-Love-MD</h2>
-                    <p>This is where you can see all bot repos and visit them for deployment.</p>
-                    <p>Click below to verify your email:</p>
-                    <a href="${verifyLink}" style="display: inline-block; background: #007BFF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-                    <p style="margin-top: 20px; font-size: 12px; color: #777;">©2025 Dark-Love-MD Bot Platform</p>
-                </div>
-            </div>
-        `;
-
-        await transporter.sendMail({
-            from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "Welcome to Dark-Love-MD",
-            html: htmlEmail
-        });
-
-        res.json({ message: 'Signup successful! Please check your email to verify your account.' });
+        res.json({ message: 'Signup successful! Please verify your email.', redirect: '/verify-sent.html' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error during signup' });
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
-// Email Verification Route
+// Verify email
 app.get('/verify', async (req, res) => {
     try {
         const { token } = req.query;
@@ -88,7 +92,31 @@ app.get('/verify', async (req, res) => {
     }
 });
 
-// Start Server
+// Resend verification email
+app.post('/resend-verification', async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.verified) return res.status(400).json({ message: 'User already verified' });
+
+    await sendVerificationEmail(email);
+    res.json({ message: 'Verification email resent!' });
+});
+
+// Reset email (change account email before verification)
+app.post('/reset-email', async (req, res) => {
+    const { oldEmail, newEmail } = req.body;
+    const user = await User.findOne({ email: oldEmail });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.verified) return res.status(400).json({ message: 'Cannot change email after verification' });
+
+    user.email = newEmail;
+    await user.save();
+
+    await sendVerificationEmail(newEmail);
+    res.json({ message: 'Email updated and verification sent!' });
+});
+
 app.listen(process.env.PORT || 3000, () => {
     console.log(`Server running on port ${process.env.PORT || 3000}`);
 });

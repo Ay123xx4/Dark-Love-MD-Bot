@@ -1,60 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login — Dark-Love-MD</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="css/style.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark-Love-MD | Login</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">Dark-Love-MD</div>
-  <nav class="nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="upload.html">Upload</a>
-    <a href="#">Services</a>
-    <a href="#">Policy</a>
-    <a href="https://t.me/DarkLoveMD" target="_blank">Channel</a>
-    <button id="themeToggle" class="theme tiny">🌞</button>
-  </nav>
-</header>
+  <header>
+    <nav>
+      <a href="index.html">Login</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="upload.html">Upload</a>
+      <a href="policy.html">Policy</a>
+      <button id="modeToggle">🌙</button>
+    </nav>
+  </header>
 
-<main class="center">
-  <section class="card wide">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input name="username" placeholder="Username" required />
-      <input type="password" name="password" placeholder="Password" required />
-      <button type="submit">Login</button>
-      <p id="loginMsg" class="muted"></p>
-    </form>
-    <p class="muted">Don’t have an account? <a href="signup.html">Sign up</a></p>
-  </section>
-</main>
+  <main>
+    <div class="form-container">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+      <p id="loginMessage"></p>
+    </div>
+  </main>
 
-<script src="ui.js"></script>
-<script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const f = e.target;
-  const res = await fetch('/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ username: f.username.value.trim(), password: f.password.value })
-  });
-  const data = await res.json();
-  if (data.success && data.token) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('username', data.username || f.username.value.trim());
-    window.location.href = 'dashboard.html';
-  } else if (res.status === 403 && data.redirect) {
-    // not verified
-    if (data.email) localStorage.setItem('pendingEmail', data.email);
-    window.location.href = 'verify-pending.html';
-  } else {
-    document.getElementById('loginMsg').textContent = data.message || 'Login failed';
-  }
-});
-</script>
+  <script src="script.js"></script>
 </body>
 </html>

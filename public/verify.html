@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Verification - Dark-Love-MD</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .verify-box {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 400px;
+    }
+    .verify-box h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .verify-box p {
+      margin-bottom: 20px;
+      color: #555;
+      font-size: 15px;
+    }
+    .btn {
+      display: inline-block;
+      margin: 10px 5px;
+      padding: 12px 20px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #388E3C;
+    }
+    .btn-secondary {
+      background: #007BFF;
+    }
+    .btn-secondary:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="verify-box">
+    <h2>Email Verification Sent 📧</h2>
+    <p>We have sent a verification link to your email. Please check your inbox.</p>
+    <a href="/resend-verification" class="btn">Resend Email</a>
+    <a href="/reset-email" class="btn btn-secondary">Reset Email</a>
+  </div>
+</body>
+</html>

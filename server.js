@@ -142,6 +142,80 @@ async function authRequired(req, res, next) {
   }
 }
 
+
+// Resend verification email
+app.get("/resend-verification", async (req, res) => {
+  try {
+    if (!req.session.userId) return res.redirect("/index.html");
+
+    const user = await User.findById(req.session.userId);
+    if (!user) return res.redirect("/signup.html");
+
+    if (user.isVerified) {
+      return res.send("<h2>Your email is already verified ✅</h2>");
+    }
+
+    // Generate new token with 15 min expiry
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(token, 10);
+
+    await VerificationToken.create({
+      userId: user._id,
+      token: hashedToken,
+      createdAt: Date.now()
+    });
+
+    await sendVerificationEmail(user, token);
+
+    res.redirect("/verify.html");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error during resend verification.");
+  }
+});
+
+// Reset email route (show simple reset form)
+app.get("/reset-email", (req, res) => {
+  res.send(`
+    <form method="POST" action="/reset-email">
+      <label>Enter new email:</label>
+      <input type="email" name="email" required>
+      <button type="submit">Update Email</button>
+    </form>
+  `);
+});
+
+app.post("/reset-email", async (req, res) => {
+  try {
+    if (!req.session.userId) return res.redirect("/index.html");
+
+    const user = await User.findById(req.session.userId);
+    if (!user) return res.redirect("/signup.html");
+
+    user.email = req.body.email;
+    user.isVerified = false;
+    await user.save();
+
+    // Send fresh verification mail
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(token, 10);
+
+    await VerificationToken.create({
+      userId: user._id,
+      token: hashedToken,
+      createdAt: Date.now()
+    });
+
+    await sendVerificationEmail(user, token);
+
+    res.send("<h2>Email updated. A new verification link has been sent ✅</h2>");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error during reset email.");
+  }
+});
+
+
 // ---------- Auth Routes ----------
 app.post('/signup', async (req, res) => {
   try {
@@ -283,3 +357,4 @@ app.post('/delete', authRequired, async (req, res) => {
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🟢 Server running on ${process.env.BASE_URL || 'http://localhost:'+PORT}`));
+

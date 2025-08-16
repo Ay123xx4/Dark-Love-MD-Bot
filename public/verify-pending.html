@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Email Verification — Dark-Love-MD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="style.css" rel="stylesheet" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Dark-Love-MD</div>
+  <nav class="nav">
+    <a href="index.html">Login</a>
+    <a href="signup.html">Sign Up</a>
+    <button id="themeToggle" class="theme tiny">🌞</button>
+  </nav>
+</header>
+
+<main class="center">
+  <section class="card wide">
+    <h2>Email verification sent</h2>
+    <p class="muted">Check your email to verify your account.</p>
+
+    <div class="stack">
+      <h3>Resend verification</h3>
+      <input id="resendEmail" placeholder="Your email" />
+      <button id="resendBtn">Resend Verification Email</button>
+    </div>
+
+    <hr/>
+
+    <div class="stack">
+      <h3>Change email</h3>
+      <input id="oldEmail" placeholder="Old email" />
+      <input id="newEmail" placeholder="New email" />
+      <button id="changeBtn">Change & Resend</button>
+    </div>
+
+    <p id="pendingMsg" class="muted"></p>
+  </section>
+</main>
+
+<script src="ui.js"></script>
+<script>
+const pending = localStorage.getItem('pendingEmail');
+if (pending) {
+  document.getElementById('resendEmail').value = pending;
+  document.getElementById('oldEmail').value = pending;
+}
+
+document.getElementById('resendBtn').addEventListener('click', async () => {
+  const email = document.getElementById('resendEmail').value.trim();
+  const res = await fetch('/resend-verification', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email })
+  });
+  const data = await res.json();
+  document.getElementById('pendingMsg').textContent = data.message || 'Done';
+});
+
+document.getElementById('changeBtn').addEventListener('click', async () => {
+  const oldEmail = document.getElementById('oldEmail').value.trim();
+  const newEmail = document.getElementById('newEmail').value.trim();
+  const res = await fetch('/reset-email', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ oldEmail, newEmail })
+  });
+  const data = await res.json();
+  if (data.success) {
+    localStorage.setItem('pendingEmail', newEmail);
+  }
+  document.getElementById('pendingMsg').textContent = data.message || 'Done';
+});
+</script>
+</body>
+</html>

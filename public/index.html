@@ -1,48 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login - Dark-Love-MD</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <title>Login — Dark-Love-MD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="css/style.css" rel="stylesheet" />
 </head>
 <body>
-<header>
-    <div class="logo">Dark-Love-MD</div>
-    <nav>
-        <a href="index.html" class="active">Login</a>
-        <a href="signup.html">Sign Up</a>
-    </nav>
+<header class="topbar">
+  <div class="brand">Dark-Love-MD</div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="upload.html">Upload</a>
+    <a href="#">Services</a>
+    <a href="#">Policy</a>
+    <a href="https://t.me/DarkLoveMD" target="_blank">Channel</a>
+    <button id="themeToggle" class="theme tiny">🌞</button>
+  </nav>
 </header>
 
-<div class="form-container">
+<main class="center">
+  <section class="card wide">
     <h2>Login</h2>
     <form id="loginForm">
-        <input type="text" name="username" placeholder="Username" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Login</button>
+      <input name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <p id="loginMsg" class="muted"></p>
     </form>
-    <p id="msg"></p>
-</div>
+    <p class="muted">Don’t have an account? <a href="signup.html">Sign up</a></p>
+  </section>
+</main>
 
+<script src="ui.js"></script>
 <script>
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const res = await fetch('/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            username: e.target.username.value,
-            password: e.target.password.value
-        })
-    });
-    const data = await res.json();
-    if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', e.target.username.value);
-        window.location.href = 'dashboard.html';
-    } else {
-        document.getElementById('msg').innerText = data.message;
-    }
+  e.preventDefault();
+  const f = e.target;
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ username: f.username.value.trim(), password: f.password.value })
+  });
+  const data = await res.json();
+  if (data.success && data.token) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username || f.username.value.trim());
+    window.location.href = 'dashboard.html';
+  } else if (res.status === 403 && data.redirect) {
+    // not verified
+    if (data.email) localStorage.setItem('pendingEmail', data.email);
+    window.location.href = 'verify-pending.html';
+  } else {
+    document.getElementById('loginMsg').textContent = data.message || 'Login failed';
+  }
 });
 </script>
 </body>

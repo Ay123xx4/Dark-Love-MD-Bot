@@ -1,44 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Sign Up - Dark-Love-MD</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <title>Sign Up — Dark-Love-MD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="css/style.css" rel="stylesheet" />
 </head>
 <body>
-<header>
-    <div class="logo">Dark-Love-MD</div>
-    <nav>
-        <a href="index.html">Login</a>
-        <a href="signup.html" class="active">Sign Up</a>
-    </nav>
+<header class="topbar">
+  <div class="brand">Dark-Love-MD</div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="upload.html">Upload</a>
+    <a href="#">Services</a>
+    <a href="#">Policy</a>
+    <a href="https://t.me/DarkLoveMD" target="_blank">Channel</a>
+    <button id="themeToggle" class="theme tiny">🌞</button>
+  </nav>
 </header>
 
-<div class="form-container">
+<main class="center">
+  <section class="card wide">
     <h2>Create Account</h2>
     <form id="signupForm">
-        <input type="text" name="username" placeholder="Username" required><br>
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Sign Up</button>
+      <input name="username" placeholder="Username" required />
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+      <p id="signupMsg" class="muted"></p>
     </form>
-    <p id="msg"></p>
-</div>
+    <p class="muted">Already have an account? <a href="index.html">Login</a></p>
+  </section>
+</main>
 
+<script src="ui.js"></script>
 <script>
 document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const res = await fetch('/signup', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            username: e.target.username.value,
-            email: e.target.email.value,
-            password: e.target.password.value
-        })
-    });
-    const data = await res.json();
-    document.getElementById('msg').innerText = data.message;
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    username: f.username.value.trim(),
+    email: f.email.value.trim(),
+    password: f.password.value
+  };
+  const res = await fetch('/signup', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (data.success) {
+    localStorage.setItem('pendingEmail', payload.email);
+    window.location.href = data.redirect || 'verify-pending.html';
+  } else {
+    document.getElementById('signupMsg').textContent = data.message || 'Signup failed';
+  }
 });
 </script>
 </body>

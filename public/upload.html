@@ -1,64 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Upload Bot - Dark-Love-MD</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <title>Upload Bot — Dark-Love-MD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="css/style.css" rel="stylesheet" />
 </head>
 <body>
-<header>
-    <div class="logo">Dark-Love-MD</div>
-    <nav>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="upload.html" class="active">Upload</a>
-        <a href="#">Services</a>
-        <a href="#">Policy</a>
-        <a href="https://t.me/DarkLoveMD">Channel</a>
-        <span id="themeToggle" class="theme-btn">🌞</span>
-    </nav>
+<header class="topbar">
+  <div class="brand">Dark-Love-MD</div>
+  <nav class="nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a class="active" href="upload.html">Upload</a>
+    <a href="#">Services</a>
+    <a href="#">Policy</a>
+    <a href="https://t.me/DarkLoveMD" target="_blank">Channel</a>
+    <button id="themeToggle" class="theme tiny">🌞</button>
+  </nav>
 </header>
 
-<div class="form-container">
+<main class="center">
+  <section class="card wide">
     <h2>Upload a Bot</h2>
-    <form id="uploadForm">
-        <input type="text" name="name" placeholder="Bot Name" required><br>
-        <input type="url" name="repoUrl" placeholder="Repository URL" required><br>
-        <input type="url" name="logoUrl" placeholder="Logo URL"><br>
-        <textarea name="description" placeholder="Description (optional)"></textarea><br>
-        <input type="password" name="password" placeholder="Your Account Password" required><br>
-        <button type="submit">Upload</button>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input name="name" placeholder="Bot Name" required />
+      <input name="repoUrl" placeholder="Repository URL (GitHub etc.)" type="url" required />
+      <div class="row">
+        <div class="col">
+          <label class="muted small">Logo (file)</label>
+          <input type="file" name="logo" accept="image/*" />
+        </div>
+        <div class="col">
+          <label class="muted small">OR Logo URL</label>
+          <input name="logoUrl" placeholder="https://example.com/logo.png" />
+        </div>
+      </div>
+      <textarea name="description" placeholder="Description (optional)"></textarea>
+      <input name="password" type="password" placeholder="Your account password (required to upload)" required />
+      <button type="submit">Upload</button>
+      <p id="msg" class="muted"></p>
     </form>
-    <p id="msg"></p>
-</div>
+  </section>
+</main>
 
+<script src="ui.js"></script>
 <script>
 const token = localStorage.getItem('token');
 if (!token) window.location.href = 'index.html';
 
 document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = {
-        name: e.target.name.value,
-        repoUrl: e.target.repoUrl.value,
-        logoUrl: e.target.logoUrl.value,
-        description: e.target.description.value,
-        password: e.target.password.value
-    };
-    const res = await fetch('/upload', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-    });
-    const data = await res.json();
-    document.getElementById('msg').innerText = data.message;
-});
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
 
-document.getElementById('themeToggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '🌙' : '🌞';
+  const res = await fetch('/upload', {
+    method: 'POST',
+    headers: { 'Authorization':'Bearer '+token },
+    body: fd
+  });
+  const data = await res.json();
+  document.getElementById('msg').textContent = data.message || 'Done';
+  if (data.success) {
+    form.reset();
+    setTimeout(()=>window.location.href='dashboard.html', 600);
+  }
 });
 </script>
 </body>

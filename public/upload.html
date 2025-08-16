@@ -1,70 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Upload Bot — Dark-Love-MD</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="css/style.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark-Love-MD | Upload Bot</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">Dark-Love-MD</div>
-  <nav class="nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a class="active" href="upload.html">Upload</a>
-    <a href="#">Services</a>
-    <a href="#">Policy</a>
-    <a href="https://t.me/DarkLoveMD" target="_blank">Channel</a>
-    <button id="themeToggle" class="theme tiny">🌞</button>
-  </nav>
-</header>
+  <header>
+    <nav>
+      <a href="index.html">Login</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="upload.html">Upload</a>
+      <a href="policy.html">Policy</a>
+      <button id="modeToggle">🌙</button>
+    </nav>
+  </header>
 
-<main class="center">
-  <section class="card wide">
-    <h2>Upload a Bot</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <input name="name" placeholder="Bot Name" required />
-      <input name="repoUrl" placeholder="Repository URL (GitHub etc.)" type="url" required />
-      <div class="row">
-        <div class="col">
-          <label class="muted small">Logo (file)</label>
-          <input type="file" name="logo" accept="image/*" />
-        </div>
-        <div class="col">
-          <label class="muted small">OR Logo URL</label>
-          <input name="logoUrl" placeholder="https://example.com/logo.png" />
-        </div>
-      </div>
-      <textarea name="description" placeholder="Description (optional)"></textarea>
-      <input name="password" type="password" placeholder="Your account password (required to upload)" required />
-      <button type="submit">Upload</button>
-      <p id="msg" class="muted"></p>
-    </form>
-  </section>
-</main>
+  <main>
+    <div class="form-container">
+      <h2>Upload Bot Repo</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="text" id="repoName" placeholder="Bot Name" required>
+        <input type="url" id="repoUrl" placeholder="Repository URL" required>
+        <input type="file" id="logo" accept="image/*" required>
+        <textarea id="description" placeholder="Description (Optional)"></textarea>
+        <input type="password" id="ownerPassword" placeholder="Confirm Password" required>
+        <button type="submit">Upload</button>
+      </form>
+      <p id="uploadMessage"></p>
+    </div>
+  </main>
 
-<script src="ui.js"></script>
-<script>
-const token = localStorage.getItem('token');
-if (!token) window.location.href = 'index.html';
-
-document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const fd = new FormData(form);
-
-  const res = await fetch('/upload', {
-    method: 'POST',
-    headers: { 'Authorization':'Bearer '+token },
-    body: fd
-  });
-  const data = await res.json();
-  document.getElementById('msg').textContent = data.message || 'Done';
-  if (data.success) {
-    form.reset();
-    setTimeout(()=>window.location.href='dashboard.html', 600);
-  }
-});
-</script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -6,94 +6,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #f9f9f9;
+    }
+    header {
       display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      background: #0077ff;
+      color: white;
+      padding: 15px;
+    }
+    header img {
+      height: 40px;
+      margin-right: 12px;
     }
     .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 100%;
       max-width: 400px;
-      text-align: center;
+      margin: 50px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
-    h2 { margin-bottom: 20px; }
+    .container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
     input {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
-      border-radius: 6px;
+      margin-bottom: 15px;
       border: 1px solid #ccc;
+      border-radius: 6px;
     }
     button {
       width: 100%;
       padding: 12px;
       background: #0077ff;
-      color: #fff;
       border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
     }
-    button:hover { background: #0055cc; }
+    button:hover { background: #005fcc; }
     .message {
-      margin-top: 15px;
-      font-size: 14px;
-      color: green;
-    }
-    .error {
-      margin-top: 15px;
-      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
       color: red;
     }
+    .link {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .link a { color: #0077ff; text-decoration: none; }
   </style>
 </head>
 <body>
+  <header>
+    <img src="logo.png" alt="Logo">
+    <h1>Dark-Love-MD</h1>
+  </header>
+
   <div class="container">
     <h2>Sign Up</h2>
     <form id="signupForm">
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
+      <label for="username">Username</label>
+      <input type="text" id="username" required>
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required>
+
       <button type="submit">Sign Up</button>
     </form>
-    <div id="response"></div>
+    <div class="message" id="message"></div>
+    <div class="link">
+      <p>Already have an account? <a href="index.html">Login</a></p>
+    </div>
   </div>
 
   <script>
-    const API_URL = "https://dark-love-md-bot-2.onrender.com/api/auth";
+    const API_URL = "https://dark-love-md-bot-2.onrender.com/api/auth/signup";
+    const messageBox = document.getElementById("message");
 
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const username = document.getElementById("username").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       try {
-        const res = await fetch(`${API_URL}/signup`, {
+        const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password })
         });
 
         const data = await res.json();
-        const responseDiv = document.getElementById("response");
 
         if (res.ok) {
-          responseDiv.innerHTML = `<p class="message">${data.message}</p>`;
-          setTimeout(() => {
-            window.location.href = "verify-sent.html";
-          }, 1500);
+          messageBox.style.color = "green";
+          messageBox.textContent = "Signup successful! Check your email to verify.";
+          document.getElementById("signupForm").reset();
         } else {
-          responseDiv.innerHTML = `<p class="error">${data.error || data.message}</p>`;
+          messageBox.textContent = data.error || "Signup failed";
         }
       } catch (err) {
-        document.getElementById("response").innerHTML = `<p class="error">Server error: ${err.message}</p>`;
+        messageBox.textContent = "Server error. Try again.";
       }
     });
   </script>

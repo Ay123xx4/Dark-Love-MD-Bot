@@ -2,113 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dark-Love-MD | Sign Up</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark-Love-MD - Signup</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0077ff;
-      color: white;
-      padding: 15px;
-    }
-    header img {
-      height: 40px;
-      margin-right: 12px;
-    }
-    .container {
-      max-width: 400px;
-      margin: 50px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #0077ff;
-      border: none;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover { background: #005fcc; }
-    .message {
-      margin-top: 10px;
-      text-align: center;
-      color: red;
-    }
-    .link {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .link a { color: #0077ff; text-decoration: none; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; }
+    .container { max-width: 400px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { margin: 0; }
+    input { width: 100%; padding: 10px; margin: 10px 0; }
+    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
   <header>
-    <img src="logo.png" alt="Logo">
+    <img src="logo.png" alt="Dark-Love-MD Logo" style="height:60px"><br>
     <h1>Dark-Love-MD</h1>
   </header>
 
   <div class="container">
     <h2>Sign Up</h2>
     <form id="signupForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" required>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" required>
-
-      <label for="password">Password</label>
-      <input type="password" id="password" required>
-
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
       <button type="submit">Sign Up</button>
     </form>
-    <div class="message" id="message"></div>
-    <div class="link">
-      <p>Already have an account? <a href="index.html">Login</a></p>
-    </div>
+    <p class="error" id="errorMsg"></p>
+    <p>Already have an account? <a href="index.html">Login</a></p>
   </div>
 
   <script>
-    const API_URL = "https://dark-love-md-bot-2.onrender.com/api/auth/signup";
-    const messageBox = document.getElementById("message");
+    const backendURL = "https://dark-love-md-bot-2.onrender.com";
 
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const errorMsg = document.getElementById("errorMsg");
 
       try {
-        const res = await fetch(API_URL, {
+        const res = await fetch(`${backendURL}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password })
@@ -116,15 +51,15 @@
 
         const data = await res.json();
 
-        if (res.ok) {
-          messageBox.style.color = "green";
-          messageBox.textContent = "Signup successful! Check your email to verify.";
-          document.getElementById("signupForm").reset();
-        } else {
-          messageBox.textContent = data.error || "Signup failed";
+        if (!res.ok) {
+          errorMsg.textContent = data.error || "Signup failed";
+          return;
         }
+
+        alert("Signup successful 🎉\nPlease check your email to verify your account.");
+        window.location.href = "verify.html"; // page showing “check email”
       } catch (err) {
-        messageBox.textContent = "Server error. Try again.";
+        errorMsg.textContent = "Server error. Try again.";
       }
     });
   </script>

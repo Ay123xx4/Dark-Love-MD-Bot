@@ -2,61 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Email Verification - Dark-Love-MD</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Dark-Love-MD - Verify Email</title>
   <style>
-    body {
-      background: #f4f4f4;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .verify-box {
+    body { font-family: Arial, sans-serif; background: #f4f4f4; }
+    .container {
+      max-width: 500px;
+      margin: 60px auto;
       background: white;
-      padding: 40px;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       text-align: center;
-      max-width: 400px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    .verify-box h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .verify-box p {
-      margin-bottom: 20px;
-      color: #555;
-      font-size: 15px;
-    }
-    .btn {
-      display: inline-block;
-      margin: 10px 5px;
-      padding: 12px 20px;
+    header { margin-bottom: 20px; }
+    header h1 { margin: 0; }
+    button {
+      padding: 10px 15px;
+      margin: 10px;
       background: #4CAF50;
       color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      transition: background 0.3s;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
-    .btn:hover {
-      background: #388E3C;
-    }
-    .btn-secondary {
-      background: #007BFF;
-    }
-    .btn-secondary:hover {
-      background: #0056b3;
-    }
+    button:hover { background: #45a049; }
+    .note { color: #666; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <div class="verify-box">
-    <h2>Email Verification Sent 📧</h2>
-    <p>We have sent a verification link to your email. Please check your inbox.</p>
-    <a href="/resend-verification" class="btn">Resend Email</a>
-    <a href="/reset-email" class="btn btn-secondary">Reset Email</a>
+  <header style="text-align:center;">
+    <img src="logo.png" alt="Dark-Love-MD Logo" style="height:60px"><br>
+    <h1>Dark-Love-MD</h1>
+  </header>
+
+  <div class="container">
+    <h2>📩 Verify Your Email</h2>
+    <p>An email verification link has been sent to your email address.</p>
+    <p>Please check your inbox and click the button inside to verify your account.</p>
+    
+    <div>
+      <button id="resendBtn">Resend Verification Email</button>
+      <button id="resetBtn">Change Email</button>
+    </div>
+
+    <p class="note">The verification link will expire in <b>15 minutes</b>.</p>
   </div>
+
+  <script>
+    const backendURL = "https://dark-love-md-bot-2.onrender.com";
+
+    document.getElementById("resendBtn").addEventListener("click", async () => {
+      const email = localStorage.getItem("pendingEmail");
+      if (!email) {
+        alert("No pending signup email found.");
+        return;
+      }
+      try {
+        const res = await fetch(`${backendURL}/api/auth/resend-verification`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error || "Error resending email.");
+        alert("Verification email resent successfully!");
+      } catch (err) {
+        alert("Server error. Try again.");
+      }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("pendingEmail");
+      window.location.href = "signup.html";
+    });
+  </script>
 </body>
 </html>

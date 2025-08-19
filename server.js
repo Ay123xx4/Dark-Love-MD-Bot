@@ -11,7 +11,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: ["https://your-vercel-frontend.vercel.app"], // replace with your vercel domain
+  origin: ["https://dark-love-md-github-repo.vercel.app"], // replace with your vercel domain
   credentials: true
 }));
 
@@ -32,3 +32,4 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+

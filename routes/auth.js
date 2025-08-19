@@ -1,127 +1,150 @@
 import express from "express";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 import nodemailer from "nodemailer";
+import User from "../models/User.js";
+import { verificationEmailHTML } from "../utils/emailTemplates.js";
 
 const router = express.Router();
 
-// 🔹 Email Sender
-const sendVerificationEmail = (user, token) => {
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify.html?token=${token}`;
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-  });
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL;
 
-  const mailOptions = {
-    from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
-    to: user.email,
-    subject: "Welcome to Dark-Love-MD – Verify Your Email",
-    html: `
-      <div style="font-family: Arial; background: #f9fafb; padding: 30px; border-radius: 8px;">
-        <h2 style="color:#333;">Welcome to Dark-Love-MD</h2>
-        <p>This is where you can see all bot repos and deploy them easily.</p>
-        <p>Click the button below to verify your email:</p>
-        <a href="${verifyUrl}" 
-           style="background: #0077ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-           Verify Email
-        </a>
-        <p style="margin-top:15px; color:#666;">This link expires in 15 minutes.</p>
-        <hr/>
-        <p style="text-align:center; color:#888;">©2025 Dark-Love-MD Bot Platform</p>
-      </div>
-    `
-  };
+// Mailer
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+});
 
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) console.error("❌ Email error:", err);
-    else console.log("📧 Verification email sent:", info.response);
-  });
-};
+// Helper: issue 15-min verification token
+function issueVerifyToken(id) {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+}
 
-// 🔹 Signup
+// Signup
 router.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Email already in use" });
 
-    const user = await User.create({ username, email, password });
+    if (!username || !email || !password)
+      return res.status(400).json({ message: "All fields are required" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
-    sendVerificationEmail(user, token);
+    const exists = await User.findOne({ $or: [{ email }, { username }] });
+    if (exists) return res.status(409).json({ message: "User already exists" });
 
-    res.json({ message: "Signup successful! Please check your email to verify." });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, email, password: hashed });
+
+    const token = issueVerifyToken(user._id);
+    const verifyLink = `${BACKEND_BASE_URL}/api/auth/verify/${token}`;
+
+    await transporter.sendMail({
+      from: `"Dark-Love-MD" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Welcome to Dark-Love-MD - Verify Your Email",
+      html: verificationEmailHTML({ verifyLink })
+    });
+
+    res.json({ message: "Signup successful! Verification email sent." });
   } catch (err) {
-    res.status(500).json({ message: "Error signing up", error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// 🔹 Verify Email
+// Verify email
 router.get("/verify/:token", async (req, res) => {
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-    if (!user) return res.status(400).json({ message: "Invalid token" });
+    if (!user) return res.status(400).send("Invalid token");
 
-    user.isVerified = true;
-    await user.save();
-    res.json({ message: "Email verified successfully!" });
-  } catch {
-    res.status(400).json({ message: "Invalid or expired token" });
+    if (!user.verified) {
+      user.verified = true;
+      await user.save();
+    }
+    return res.redirect(`${FRONTEND_URL}/verify-success.html`);
+  } catch (err) {
+    return res.status(400).send("Token expired or invalid");
   }
 });
 
-// 🔹 Resend Verification Email
+// Resend verification
 router.post("/resend-verification", async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ message: "User already verified" });
+    const u = await User.findOne({ email });
+    if (!u) return res.status(404).json({ message: "User not found" });
+    if (u.verified) return res.json({ message: "Already verified" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
-    sendVerificationEmail(user, token);
+    const token = issueVerifyToken(u._id);
+    const verifyLink = `${BACKEND_BASE_URL}/api/auth/verify/${token}`;
 
-    res.json({ message: "Verification email resent! Please check your inbox." });
+    await transporter.sendMail({
+      from: `"Dark-Love-MD" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Resend Verification - Dark-Love-MD",
+      html: verificationEmailHTML({ verifyLink })
+    });
+
+    res.json({ message: "Verification email resent." });
   } catch (err) {
-    res.status(500).json({ message: "Error resending email", error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// 🔹 Reset Email (before verification)
+// Reset email (change account email -> new verification required)
 router.post("/reset-email", async (req, res) => {
   try {
     const { oldEmail, newEmail } = req.body;
-    const user = await User.findOne({ email: oldEmail });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ message: "Cannot reset email after verification" });
+    const u = await User.findOne({ email: oldEmail });
+    if (!u) return res.status(404).json({ message: "Old email not found" });
 
-    user.email = newEmail;
-    await user.save();
+    u.email = newEmail;
+    u.verified = false;
+    await u.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
-    sendVerificationEmail(user, token);
+    const token = issueVerifyToken(u._id);
+    const verifyLink = `${BACKEND_BASE_URL}/api/auth/verify/${token}`;
+
+    await transporter.sendMail({
+      from: `"Dark-Love-MD" <${process.env.GMAIL_USER}>`,
+      to: newEmail,
+      subject: "Verify Your New Email - Dark-Love-MD",
+      html: verificationEmailHTML({ verifyLink })
+    });
 
     res.json({ message: "Email updated. Verification sent to new email." });
   } catch (err) {
-    res.status(500).json({ message: "Error resetting email", error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// 🔹 Login
+// Login (username OR email + password)
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) return res.status(400).json({ message: "User not found" });
+  try {
+    const { username, email, password } = req.body;
+    if ((!username && !email) || !password)
+      return res.status(400).json({ message: "Missing credentials" });
 
-  if (!user.isVerified) return res.status(403).json({ message: "Please verify your email first" });
+    const user = await User.findOne(
+      username ? { username } : { email }
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  const isMatch = await user.comparePassword(password);
-  if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(400).json({ message: "Username or password is incorrect" });
 
-  const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
-  res.json({ token });
+    if (!user.verified) return res.status(401).json({ message: "Email not verified" });
+
+    const safeUser = { id: user._id, username: user.username, email: user.email };
+    res.json({ message: "Login successful", user: safeUser });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 export default router;

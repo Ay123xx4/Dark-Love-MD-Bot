@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-  "node": "18.x"
-}
+"engines": {
+    "node": ">=18.17.0"
+},
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

@@ -7,9 +7,6 @@
     "start": "node server.js"
   },
   "engines": {
-    "node": ">=18.17.0"
-  },
-  "engines": {
   "node": "18.x"
 }
   "dependencies": {

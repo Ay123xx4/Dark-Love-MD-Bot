@@ -121,14 +121,14 @@
 
     // ✅ Handle Auth
     if (!auth) {
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     } else {
       welcomeMsg.textContent = `Welcome, ${auth.username}`;
       authBtn.textContent = "Logout";
       authBtn.href = "#";
       authBtn.onclick = () => {
         localStorage.removeItem("user");
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       };
     }
 
@@ -201,3 +201,4 @@
   </script>
 </body>
 </html>
+

@@ -1,66 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dark-Love-MD - Signup</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; }
-    .container { max-width: 400px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; }
-    header { text-align: center; margin-bottom: 20px; }
-    header h1 { margin: 0; }
-    input { width: 100%; padding: 10px; margin: 10px 0; }
-    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .error { color: red; margin-top: 10px; }
-  </style>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <header>
-    <img src="logo.png" alt="Dark-Love-MD Logo" style="height:60px"><br>
+    <img src="logo.png" alt="Dark-Love-MD Logo" height="40"/>
     <h1>Dark-Love-MD</h1>
   </header>
 
-  <div class="container">
-    <h2>Sign Up</h2>
-    <form id="signupForm">
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Sign Up</button>
-    </form>
-    <p class="error" id="errorMsg"></p>
-    <p>Already have an account? <a href="index.html">Login</a></p>
-  </div>
+  <h2>Sign Up</h2>
+  <form id="signupForm">
+    <input type="text" placeholder="Username" id="username" required/>
+    <input type="email" placeholder="Email" id="email" required/>
+    <input type="password" placeholder="Password" id="password" required/>
+    <button type="submit">Sign Up</button>
+  </form>
+
+  <p>Already have an account? <a href="index.html">Login</a></p>
 
   <script>
-    const backendURL = "https://dark-love-md-bot-2.onrender.com";
-
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("username").value;
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const errorMsg = document.getElementById("errorMsg");
 
-      try {
-        const res = await fetch(`${backendURL}/api/auth/signup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password })
-        });
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          errorMsg.textContent = data.error || "Signup failed";
-          return;
-        }
-
-        alert("Signup successful 🎉\nPlease check your email to verify your account.");
-        window.location.href = "verify.html"; // page showing “check email”
-      } catch (err) {
-        errorMsg.textContent = "Server error. Try again.";
-      }
+      const data = await res.json();
+      alert(data.message || "Signup response");
     });
   </script>
 </body>

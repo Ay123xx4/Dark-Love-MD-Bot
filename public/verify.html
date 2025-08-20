@@ -1,26 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Verification</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Email Verification</h2>
+  <h1>Email Verification</h1>
   <p id="status">Verifying...</p>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+    async function verifyEmail() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
 
-    fetch(`/api/auth/verify/${token}`)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("status").innerText = data.message;
-      })
-      .catch(() => {
-        document.getElementById("status").innerText = "Verification failed.";
-      });
+      if (!token) {
+        document.getElementById("status").innerText = "Invalid verification link.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://dark-love-md-bot-2.onrender.com/api/auth/verify/${token}`);
+        const data = await res.json();
+        document.getElementById("status").innerText = data.message || "Verification successful!";
+      } catch (err) {
+        document.getElementById("status").innerText = "Server error. Try again.";
+      }
+    }
+
+    verifyEmail();
   </script>
 </body>
 </html>

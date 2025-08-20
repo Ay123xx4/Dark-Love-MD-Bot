@@ -1,30 +1,28 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
+import cors from "cors";
 import authRoutes from "./routes/auth.js";
 
 dotenv.config();
+
 const app = express();
-
 app.use(express.json());
+app.use(cors());
 
-// Allow frontend (Vercel) to call backend (Render)
-app.use(cors({
-  origin: "https://dark-love-md-github-repo.vercel.app", // replace with your Vercel domain
-  credentials: true
-}));
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
-// API Routes only
+// Routes
 app.use("/api/auth", authRoutes);
 
+// Default route
+app.get("/", (req, res) => {
+  res.send("Dark Love MD Backend is running 🚀");
+});
+
 const PORT = process.env.PORT || 5000;
-
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch((err) => console.error("MongoDB error:", err));
-
-
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

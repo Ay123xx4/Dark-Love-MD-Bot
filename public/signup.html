@@ -2,46 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signup - Dark Love MD</title>
+  <title>Signup - Dark-Love-MD</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header>
+    <img src="logo.png" alt="Logo">
+    <h1>Dark-Love-MD</h1>
+  </header>
+
   <div class="container">
-    <header>
-      <img src="logo.png" alt="Logo">
-      <h2>Dark Love MD - Signup</h2>
-    </header>
+    <h2>Signup</h2>
     <form id="signupForm">
       <input type="text" id="username" placeholder="Username" required>
       <input type="email" id="email" placeholder="Email" required>
       <input type="password" id="password" placeholder="Password" required>
       <button type="submit">Signup</button>
     </form>
-    <p id="message"></p>
+    <a href="index.html">Already have an account? Login</a>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button onclick="closeModal()">OK</button>
+    </div>
   </div>
 
   <script>
-    const form = document.getElementById("signupForm");
-    form.addEventListener("submit", async (e) => {
+    const backendUrl = "https://dark-love-md-bot-2.onrender.com";
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("username").value;
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       try {
-        const res = await fetch("https://dark-love-md-bot-2.onrender.com/api/auth/signup", {
+        const res = await fetch(`${backendUrl}/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password })
         });
-
         const data = await res.json();
-        document.getElementById("message").innerText = data.message || "Signup successful!";
+
+        if (res.ok) {
+          showModal("Signup successful! Please verify your email.", () => {
+            window.location.href = "verify.html";
+          });
+        } else {
+          showModal(data.message || "Signup failed");
+        }
       } catch (err) {
-        document.getElementById("message").innerText = "Server error. Try again.";
+        showModal("Server error. Try again.");
       }
     });
+
+    function showModal(message, callback) {
+      document.getElementById("modal-message").innerText = message;
+      document.getElementById("modal").style.display = "flex";
+      window.modalCallback = callback || null;
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+      if (window.modalCallback) window.modalCallback();
+    }
   </script>
 </body>
 </html>

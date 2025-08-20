@@ -2,108 +2,63 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import sendVerificationEmail from "../utils/sendVerificationEmail.js";
+import { sendVerificationEmail } from "../utils/sendVerificationEmail.js";
 
 const router = express.Router();
 
-// =================== SIGNUP ===================
+// Signup
 router.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // validate input
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    // check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // create user (unverified at first)
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword,
-      isVerified: false,
-    });
-
+    const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
-    // generate email verification token (expires in 15 min)
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    // send email
-    await sendVerificationEmail(user.email, token);
+    await sendVerificationEmail(email, token);
 
-    return res.status(201).json({ 
-      message: "Signup successful. Please check your email to verify." 
-    });
-
-  } catch (err) {
-    console.error("Signup error:", err);
+    res.json({ message: "Signup successful! Check your email for verification." });
+  } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// =================== VERIFY EMAIL ===================
+// Verify Email
 router.get("/verify/:token", async (req, res) => {
   try {
-    const { token } = req.params;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.userId);
-    if (!user) return res.status(400).send("Invalid token");
+    await User.findByIdAndUpdate(decoded.id, { verified: true });
 
-    user.isVerified = true;
-    await user.save();
-
-    res.redirect("/verify-success.html"); // front-end success page
-  } catch (err) {
-    console.error("Verify error:", err);
-    res.status(400).send("Invalid or expired token");
+    res.json({ message: "Email verified successfully!" });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid or expired token" });
   }
 });
 
-// =================== LOGIN ===================
+// Login (username + password)
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // find user
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    const user = await User.findOne({ username });
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-    // check email verification
-    if (!user.isVerified) {
-      return res.status(400).json({ message: "Please verify your email first" });
-    }
-
-    // check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // issue JWT
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    if (!user.verified) return res.status(403).json({ message: "Please verify your email first" });
 
-    res.json({ token, username: user.username });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-  } catch (err) {
-    console.error("Login error:", err);
+    res.json({ message: "Login successful!", token });
+  } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });

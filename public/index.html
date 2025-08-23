@@ -50,6 +50,7 @@
           showPopup(data.message || "Server error, try again.");
         } else {
           showPopup("Login successful!");
+          localStorage.setItem("user", username); // save session
           setTimeout(() => {
             window.location.href = `dashboard.html?user=${username}`;
           }, 1500);
@@ -70,3 +71,4 @@
   </script>
 </body>
 </html>
+

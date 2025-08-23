@@ -102,9 +102,11 @@
     <div>
       <span id="toggleMode" class="toggle-mode">🌙</span>
       <a href="login.html" id="authBtn">Login</a>
+      <button onclick="logout()" style="margin-left:auto;">Logout</button>
     </div>
   </header>
 
+  <h2>Welcome, <span id="userDisplay"></span> 🎉</h2>
   <div class="welcome" id="welcomeMsg">Welcome, Guest</div>
 
   <div class="search-bar">
@@ -198,7 +200,19 @@
     }
 
     loadBots();
+
+    // Check login session
+    const loggedInUser = localStorage.getItem("user");
+    if (!loggedInUser) {
+      window.location.href = "index.html"; // redirect if not logged in
+    } else {
+      document.getElementById("userDisplay").textContent = loggedInUser;
+    }
+
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
   </script>
 </body>
 </html>
-

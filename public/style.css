@@ -7,6 +7,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-height: 100vh;
 }
 
@@ -20,34 +21,32 @@ header {
   align-items: center;
   justify-content: center;
   gap: 15px;
-}
-
-header .logo {
-  width: 40px;
-  height: 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 /* Form Box */
 .form-container {
-  margin-top: 50px;
-  padding: 30px;
+  margin-top: 100px;
+  padding: 40px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  width: 350px;
+  width: 400px;
   text-align: center;
 }
 
 .form-container h2 {
   margin-bottom: 20px;
-  font-size: 24px;
+  font-size: 26px;
   color: #222;
 }
 
 input {
   width: 90%;
-  padding: 12px;
-  margin: 10px 0;
+  padding: 15px;
+  margin: 12px 0;
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 16px;
@@ -55,7 +54,7 @@ input {
 
 button {
   width: 95%;
-  padding: 12px;
+  padding: 14px;
   background: #222;
   color: white;
   font-size: 16px;
@@ -70,7 +69,7 @@ button:hover {
 
 p {
   margin-top: 15px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 a {
@@ -103,3 +102,35 @@ a:hover {
   text-align: center;
   width: 300px;
 }
+
+/* Dashboard */
+.dashboard-container {
+  margin-top: 120px;
+  width: 90%;
+  max-width: 800px;
+}
+
+.search-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 70%;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.bot-list {
+  margin-top: 20px;
+}
+
+.bot-item {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  margin-bottom: 10px;
+  }
+  

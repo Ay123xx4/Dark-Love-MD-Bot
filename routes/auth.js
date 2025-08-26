@@ -1,97 +1,63 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const User = require("../models/User");
-const nodemailer = require("nodemailer");
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+
 const router = express.Router();
 
-// Transporter for sending emails
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-// Signup route
+// ====== SIGNUP ======
 router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
-
   try {
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "Email already registered" });
+    if (user) return res.status(400).json({ error: "User already exists" });
 
-    let userNameTaken = await User.findOne({ username });
-    if (userNameTaken) return res.status(400).json({ message: "Username already taken" });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    user = new User({
-      username,
-      email,
-      password: hashedPassword,
-      verificationCode
-    });
-
+    user = new User({ username, email, password: hashedPassword });
     await user.save();
 
-    // Send verification email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify your Dark-Love-MD account",
-      text: `Your verification code is ${verificationCode}`
-    });
-
-    res.json({ message: "Signup successful, check your email for verification code" });
-
+    res.json({ message: "Signup successful" });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Verify route
-router.post("/verify", async (req, res) => {
-  const { code } = req.body;
-
-  try {
-    const user = await User.findOne({ verificationCode: code });
-    if (!user) return res.status(400).json({ message: "Invalid verification code" });
-
-    user.isVerified = true;
-    user.verificationCode = null;
-    await user.save();
-
-    res.json({ message: "Account verified successfully" });
-
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Login route
+// ====== LOGIN ======
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
+  const { email, password } = req.body;
   try {
-    const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: "Invalid username or password" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid username or password" });
+    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-    if (!user.isVerified) return res.status(400).json({ message: "Please verify your email first" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.json({ message: "Login successful", username: user.username });
-
+    res.json({ message: "Login successful", token, username: user.username });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
-             
+// ====== DELETE ACCOUNT ======
+router.post("/delete", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: "Invalid password" });
+
+    await User.deleteOne({ username });
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+export default router;
+  

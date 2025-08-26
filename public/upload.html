@@ -2,200 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dark-Love-MD | Upload Bot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      color: #333;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      background: #0077ff;
-      color: white;
-    }
-    header nav a {
-      margin: 0 10px;
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    header nav a:hover { text-decoration: underline; }
-    .toggle-mode {
-      font-size: 22px;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    .container {
-      max-width: 500px;
-      margin: 40px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    form label {
-      display: block;
-      margin: 12px 0 6px;
-      font-weight: bold;
-    }
-    form input, form textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    form button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      background: #0077ff;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    form button:hover { background: #005fcc; }
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      font-weight: bold;
-    }
-
-    /* Dark Mode */
-    body.dark {
-      background: #1e1e1e;
-      color: white;
-    }
-    body.dark header { background: #333; }
-    body.dark .container { background: #2a2a2a; color: white; }
-    body.dark input, body.dark textarea {
-      background: #444; color: white; border: 1px solid #666;
-    }
-  </style>
+  <title>Upload Bot</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
+  <header class="navbar">
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="upload.html">Upload</a>
-      <a href="#">Services</a>
+      <a href="#">Service</a>
       <a href="#">Policy</a>
+      <a href="settings.html">Settings</a>
     </nav>
-    <div>
-      <span id="toggleMode" class="toggle-mode">🌙</span>
-      <a href="login.html" id="authBtn">Login</a>
-    </div>
   </header>
 
-  <div class="container">
-    <h2>Upload a Bot Repo</h2>
+  <main>
+    <h2>Upload Your Bot</h2>
     <form id="uploadForm">
-      <label for="name">Bot Name</label>
-      <input type="text" id="name" required>
-
-      <label for="url">Repo URL</label>
-      <input type="url" id="url" required>
-
-      <label for="logo">Logo Image</label>
-      <input type="file" id="logo" accept="image/*" required>
-
-      <label for="description">Description (optional)</label>
-      <textarea id="description" rows="3"></textarea>
-
+      <input type="text" name="botName" placeholder="Bot Name" required><br>
+      <input type="text" name="botRepo" placeholder="Bot Repo URL" required><br>
+      <input type="text" name="botFile" placeholder="Bot File" required><br>
+      <input type="text" name="zipFile" placeholder="Zip File Link"><br>
+      <input type="text" name="logo" placeholder="Logo Image URL"><br>
+      <input type="text" name="picture" placeholder="Picture URL"><br>
+      <textarea name="description" placeholder="Description (optional)"></textarea><br>
       <button type="submit">Upload</button>
     </form>
-    <div class="message" id="message"></div>
-  </div>
+  </main>
 
   <script>
-    const API_URL = "https://dark-love-md-bot-2.onrender.com/api/bots";
-    const auth = JSON.parse(localStorage.getItem("user"));
-    const messageBox = document.getElementById("message");
+    const backend = "https://dark-love-md-bot-2.onrender.com";
 
-    // ✅ Auth check
-    if (!auth) {
-      window.location.href = "index.html";
-    } else {
-      document.getElementById("authBtn").textContent = "Logout";
-      document.getElementById("authBtn").href = "#";
-      document.getElementById("authBtn").onclick = () => {
-        localStorage.removeItem("user");
-        window.location.href = "index.html";
-      };
-    }
-
-    // ✅ Dark/Light mode toggle
-    const toggleBtn = document.getElementById("toggleMode");
-    toggleBtn.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-      toggleBtn.textContent = document.body.classList.contains("dark") ? "🌞" : "🌙";
-    });
-
-    // ✅ Upload bot
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const username = localStorage.getItem("username");
 
-      const name = document.getElementById("name").value.trim();
-      const url = document.getElementById("url").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const logoFile = document.getElementById("logo").files[0];
+      const formData = new FormData(e.target);
+      const body = Object.fromEntries(formData.entries());
+      body.username = username;
 
-      if (!name || !url || !logoFile) {
-        messageBox.textContent = "Please fill all required fields.";
-        messageBox.style.color = "red";
-        return;
-      }
-
-      // Convert image file to Base64
-      const toBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = (error) => reject(error);
+      const res = await fetch(`${backend}/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
-      const logoBase64 = await toBase64(logoFile);
 
-      const botData = {
-        name,
-        url,
-        logo: logoBase64,
-        description,
-        owner: auth.username
-      };
-
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(botData)
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          messageBox.textContent = "Bot uploaded successfully!";
-          messageBox.style.color = "green";
-          document.getElementById("uploadForm").reset();
-        } else {
-          messageBox.textContent = data.error || "Upload failed.";
-          messageBox.style.color = "red";
-        }
-      } catch (err) {
-        messageBox.textContent = "Error connecting to server.";
-        messageBox.style.color = "red";
-      }
+      const data = await res.json();
+      alert(data.message);
+      window.location.href = "dashboard.html";
     });
   </script>
 </body>

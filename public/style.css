@@ -83,27 +83,27 @@ header .right-links {
   background: #fff;
 }
 
-/* Popbox */
-.popbox {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #ccc;
-  text-align: center;
-  z-index: 1000;
-}
-.popbox button {
-  padding: 10px;
-  margin-top: 10px;
-  background: #222;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
+/* Popup */
+  .popbox {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .popbox.hidden {
+    display: none;
+  }
+  
+  .popbox-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+  }
 .user-profile {
   display: flex;
   align-items: center;

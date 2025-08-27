@@ -93,11 +93,11 @@ header .right-links {
     align-items: center;
   }
   
-  .popbox.hidden {
+  .popbox {
     display: none;
   }
   
-  .popbox-box {
+  .popbox {
     background: white;
     padding: 20px;
     border-radius: 8px;

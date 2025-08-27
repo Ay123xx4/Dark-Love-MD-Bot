@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Dark-Love-MD - Login</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Login</h2>
-  <form id="loginForm">
-    <input type="email" name="email" placeholder="Email" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <button type="submit">Login</button>
-  </form>
-  <p>Don't have an account? <a href="signup.html">Signup</a></p>
+  <div class="form-container">
+    <h2>Dark-Love-MD Login</h2>
+    <form id="loginForm" class="form-box">
+      <input type="text" name="username" placeholder="Username" required><br>
+      <input type="password" name="password" placeholder="Password" required><br>
+      <button type="submit" class="btn">Login</button>
+    </form>
+    <p>Don’t have an account? <a href="signup.html">Signup</a></p>
+  </div>
 
   <script>
     const backend = "https://dark-love-md-bot-2.onrender.com";
@@ -25,29 +27,17 @@
     // Popbox function
     function showPopbox(message, callback) {
       const box = document.createElement("div");
-      box.style.position = "fixed";
-      box.style.top = "50%";
-      box.style.left = "50%";
-      box.style.transform = "translate(-50%, -50%)";
-      box.style.background = "#fff";
-      box.style.padding = "20px";
-      box.style.border = "1px solid #ccc";
-      box.style.textAlign = "center";
-      box.style.zIndex = "1000";
+      box.className = "popbox";
+      box.innerHTML = `
+        <p>${message}</p>
+        <button id="okBtn">OK</button>
+      `;
+      document.body.appendChild(box);
 
-      const msg = document.createElement("p");
-      msg.innerText = message;
-
-      const okBtn = document.createElement("button");
-      okBtn.innerText = "OK";
-      okBtn.onclick = () => {
+      document.getElementById("okBtn").onclick = () => {
         document.body.removeChild(box);
         if (callback) callback();
       };
-
-      box.appendChild(msg);
-      box.appendChild(okBtn);
-      document.body.appendChild(box);
     }
 
     // Handle login form

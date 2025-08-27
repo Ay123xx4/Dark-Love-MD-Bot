@@ -2,30 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="style2.css">
+  <title>Dark-Love-MD Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="navbar">
+  <header>
+    <h1>Dark-Love-MD</h1>
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="upload.html">Upload</a>
       <a href="#">Service</a>
       <a href="#">Policy</a>
       <a href="settings.html">Settings</a>
-      <div class="right">
-        <a href="index.html">Login</a>
-        <a href="signup.html">Signup</a>
-      </div>
     </nav>
+    <div class="right-links">
+      <a href="index.html" onclick="logout()">Logout</a>
+      <a href="signup.html">Signup</a>
+    </div>
   </header>
 
-  <main>
-    <h1 id="welcome"></h1>
-    <input type="text" id="search" placeholder="Search bot...">
-    <button onclick="searchBot()">Search</button>
+  <div class="dashboard">
+    <h2 id="welcome"></h2>
+    <input type="text" id="search" placeholder="Search bots...">
     <div id="uploads"></div>
-  </main>
+  </div>
 
   <footer>
     <p>@copyright by Dark-Love-MD</p>
@@ -34,53 +34,54 @@
   <script>
     const backend = "https://dark-love-md-bot-2.onrender.com";
 
-    async function loadDashboard() {
-      const username = localStorage.getItem("username");
-      document.getElementById("welcome").innerText = `Welcome, ${username}`;
+    if (!localStorage.getItem("username")) {
+      window.location.href = "index.html";
+    }
 
+    document.getElementById("welcome").innerText = "Welcome " + localStorage.getItem("username");
+
+    function logout() {
+      localStorage.clear();
+    }
+
+    async function fetchUploads() {
       const res = await fetch(`${backend}/upload`);
       const data = await res.json();
-      displayUploads(data);
-    }
+      const uploadsDiv = document.getElementById("uploads");
+      uploadsDiv.innerHTML = "";
 
-    function displayUploads(data) {
-      const container = document.getElementById("uploads");
-      container.innerHTML = "";
-      data.forEach(u => {
-        const div = document.createElement("div");
-        div.className = "upload-card";
-        div.innerHTML = `
-          <h3>${u.botName}</h3>
-          <p>Repo: ${u.botRepo}</p>
-          <p>Bot File: ${u.botFile}</p>
-          <p>Uploaded by: ${u.username}</p>
-          ${u.description ? `<p>${u.description}</p>` : ""}
+      data.forEach(upload => {
+        const box = document.createElement("div");
+        box.className = "upload-box";
+        box.innerHTML = `
+          <p><strong>Bot Name:</strong> ${upload.botName}</p>
+          <p><strong>Repo:</strong> ${upload.botRepo}</p>
+          <p><strong>File:</strong> ${upload.botFile}</p>
+          <p><strong>Description:</strong> ${upload.description || "None"}</p>
+          <p><strong>Uploaded by:</strong> ${upload.username}</p>
         `;
-        container.appendChild(div);
+        uploadsDiv.appendChild(box);
       });
     }
 
-    function searchBot() {
+    document.getElementById("search").addEventListener("input", () => {
       const term = document.getElementById("search").value.toLowerCase();
-      const cards = document.querySelectorAll(".upload-card");
+      const boxes = document.querySelectorAll(".upload-box");
       let found = false;
-
-      cards.forEach(c => {
-        if (c.innerText.toLowerCase().includes(term)) {
-          c.style.display = "block";
+      boxes.forEach(box => {
+        if (box.innerText.toLowerCase().includes(term)) {
+          box.style.display = "block";
           found = true;
         } else {
-          c.style.display = "none";
+          box.style.display = "none";
         }
       });
-
       if (!found) {
-        document.getElementById("uploads").innerHTML = "<p>Not found</p>";
+        document.getElementById("uploads").innerHTML = "<p>Not Found</p>";
       }
-    }
+    });
 
-    loadDashboard();
+    fetchUploads();
   </script>
 </body>
 </html>
-

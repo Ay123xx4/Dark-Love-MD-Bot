@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Upload Bot</title>
-  <link rel="stylesheet" href="style2.css">
+  <title>Dark-Love-MD Upload</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="navbar">
+  <header>
+    <h1>Dark-Love-MD</h1>
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="upload.html">Upload</a>
@@ -14,42 +15,69 @@
       <a href="#">Policy</a>
       <a href="settings.html">Settings</a>
     </nav>
+    <div class="right-links">
+      <a href="index.html" onclick="logout()">Logout</a>
+      <a href="signup.html">Signup</a>
+    </div>
   </header>
 
-  <main>
-    <h2>Upload Your Bot</h2>
-    <form id="uploadForm">
+  <div class="form-container">
+    <h2>Upload Bot</h2>
+    <form id="uploadForm" class="form-box" enctype="multipart/form-data">
       <input type="text" name="botName" placeholder="Bot Name" required><br>
-      <input type="text" name="botRepo" placeholder="Bot Repo URL" required><br>
+      <input type="text" name="botRepo" placeholder="Bot Repo" required><br>
       <input type="text" name="botFile" placeholder="Bot File" required><br>
-      <input type="text" name="zipFile" placeholder="Zip File Link"><br>
-      <input type="text" name="logo" placeholder="Logo Image URL"><br>
-      <input type="text" name="picture" placeholder="Picture URL"><br>
+      <label>Upload Zip File</label>
+      <input type="file" name="zipFile" accept=".zip" required><br>
+      <label>Upload Logo</label>
+      <input type="file" name="logo" accept="image/*" required><br>
       <textarea name="description" placeholder="Description (optional)"></textarea><br>
-      <button type="submit">Upload</button>
+      <button type="submit" class="btn">Upload</button>
     </form>
-  </main>
+  </div>
+
+  <footer>
+    <p>@copyright by Dark-Love-MD</p>
+  </footer>
 
   <script>
     const backend = "https://dark-love-md-bot-2.onrender.com";
 
+    if (!localStorage.getItem("username")) {
+      window.location.href = "index.html";
+    }
+
+    function logout() {
+      localStorage.clear();
+    }
+
+    function showPopbox(message, callback) {
+      const box = document.createElement("div");
+      box.className = "popbox";
+      box.innerHTML = `<p>${message}</p><button id="okBtn">OK</button>`;
+      document.body.appendChild(box);
+      document.getElementById("okBtn").onclick = () => {
+        document.body.removeChild(box);
+        if (callback) callback();
+      };
+    }
+
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = localStorage.getItem("username");
-
       const formData = new FormData(e.target);
-      const body = Object.fromEntries(formData.entries());
-      body.username = username;
+      formData.append("username", localStorage.getItem("username"));
 
       const res = await fetch(`${backend}/upload`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: formData
       });
 
       const data = await res.json();
-      alert(data.message);
-      window.location.href = "dashboard.html";
+      if (data.error) return showPopbox(data.error);
+
+      showPopbox("Upload successful", () => {
+        window.location.href = "dashboard.html";
+      });
     });
   </script>
 </body>

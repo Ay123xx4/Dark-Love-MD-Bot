@@ -2,67 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Email Verification - Dark-Love-MD</title>
-  <link rel="stylesheet" href="style2.css">
+  <title>Verify Email</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <img src="logo.png" alt="Logo">
-    <h1>Dark-Love-MD</h1>
-  </header>
-
   <div class="container">
-    <h2>Verify Email</h2>
+    <h2>Email Verification</h2>
     <form id="verifyForm">
-      <input type="text" id="code" placeholder="Enter verification code" required>
+      <input type="email" id="email" placeholder="Enter your email" required><br>
+      <input type="text" id="code" placeholder="Enter verification code" required><br>
       <button type="submit">Verify</button>
     </form>
   </div>
 
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <p id="modal-message"></p>
-      <button onclick="closeModal()">OK</button>
+  <!-- Popbox -->
+  <div id="popbox" class="popbox">
+    <div class="popbox-content">
+      <p id="popboxMessage"></p>
+      <button onclick="closePopbox()">OK</button>
     </div>
   </div>
 
-  <script>
-    const backendUrl = "https://dark-love-md-bot-2.onrender.com";
+<script>
+const backendURL = "https://dark-love-md-bot-2.onrender.com";
 
-    document.getElementById("verifyForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const code = document.getElementById("code").value;
+document.getElementById("verifyForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const code = document.getElementById("code").value;
 
-      try {
-        const res = await fetch(`${backendUrl}/auth/verify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
-        });
-        const data = await res.json();
+  const res = await fetch(`${backendURL}/auth/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
 
-        if (res.ok) {
-          showModal("Verification successful!", () => {
-            window.location.href = "verify-success.html";
-          });
-        } else {
-          showModal(data.message || "Invalid code");
-        }
-      } catch (err) {
-        showModal("Server error. Try again.");
-      }
-    });
+  const data = await res.json();
+  showPopbox(data.message || data.error);
 
-    function showModal(message, callback) {
-      document.getElementById("modal-message").innerText = message;
-      document.getElementById("modal").style.display = "flex";
-      window.modalCallback = callback || null;
-    }
+  if (data.message) {
+    setTimeout(() => window.location.href = "index.html", 2000);
+  }
+});
 
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-      if (window.modalCallback) window.modalCallback();
-    }
-  </script>
+function showPopbox(msg) {
+  document.getElementById("popboxMessage").innerText = msg;
+  document.getElementById("popbox").style.display = "flex";
+}
+function closePopbox() {
+  document.getElementById("popbox").style.display = "none";
+}
+</script>
 </body>
 </html>

@@ -1,208 +1,118 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
 import bcrypt from "bcrypt";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import jwt from "jsonwebtoken";
+import cors from "cors";
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// === MongoDB Connection ===
-mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/darklovemd", {
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
-// === Schemas ===
+// User schema
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  verified: { type: Boolean, default: false },
-  verificationCode: { type: String },
-});
-
-const uploadSchema = new mongoose.Schema({
   username: String,
-  botName: String,
-  botRepo: String,
-  botFile: String,
-  zipFile: String,
-  logo: String,
-  description: String,
+  email: String,
+  password: String,
+  isVerified: { type: Boolean, default: false },
+  verificationCode: String,
 });
 
 const User = mongoose.model("User", userSchema);
-const Upload = mongoose.model("Upload", uploadSchema);
 
-// === Multer Setup (file uploads) ===
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = "uploads";
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
-
-// === Email Setup (Nodemailer with Gmail or SMTP) ===
+// Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER, // your email
-    pass: process.env.EMAIL_PASS, // app password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// === Signup with Email Verification ===
-app.post("/auth/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    const existing = await User.findOne({ $or: [{ username }, { email }] });
-    if (existing) return res.json({ error: "Username or Email already exists" });
+// Signup
+app.post("/api/auth/signup", async (req, res) => {
+  const { username, email, password } = req.body;
 
-    const hashed = await bcrypt.hash(password, 10);
+  try {
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: "Email already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const user = new User({
       username,
       email,
-      password: hashed,
-      verified: false,
+      password: hashedPassword,
       verificationCode,
     });
+
     await user.save();
 
-    // Send verification email
     await transporter.sendMail({
-      from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: "Verify your Email",
-      text: `Your verification code is: ${verificationCode}`,
+      subject: "Verify your email",
+      text: `Your verification code is ${verificationCode}`,
     });
 
-    res.json({ message: "Signup successful, check your email for verification code" });
+    res.status(201).json({ message: "User registered. Please verify your email." });
   } catch (err) {
-    res.json({ error: "Signup failed" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// === Verify Email ===
-app.post("/auth/verify", async (req, res) => {
+// Verify Email
+app.post("/api/auth/verify", async (req, res) => {
+  const { code } = req.body;
+
   try {
-    const { email, code } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ error: "User not found" });
+    const user = await User.findOne({ verificationCode: code });
+    if (!user) return res.status(400).json({ message: "Invalid code" });
 
-    if (user.verificationCode !== code) return res.json({ error: "Invalid verification code" });
-
-    user.verified = true;
+    user.isVerified = true;
     user.verificationCode = null;
     await user.save();
 
-    res.json({ message: "Email verified successfully" });
+    res.json({ message: "Email verified successfully!" });
   } catch (err) {
-    res.json({ error: "Verification failed" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// === Login (only if verified) ===
-app.post("/auth/login", async (req, res) => {
+// Login
+app.post("/api/auth/login", async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    const { username, password } = req.body;
     const user = await User.findOne({ username });
-    if (!user) return res.json({ error: "Invalid username or password" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!user.verified) return res.json({ error: "Please verify your email first" });
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Please verify your email first" });
+    }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.json({ error: "Invalid username or password" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    res.json({ message: "Login successful", username: user.username });
-  } catch (err) {
-    res.json({ error: "Login failed" });
-  }
-});
-
-// === Settings Routes ===
-app.post("/auth/change-password", async (req, res) => {
-  try {
-    const { username, currentPassword, newPassword } = req.body;
-    const user = await User.findOne({ username });
-    if (!user) return res.json({ error: "User not found" });
-
-    const valid = await bcrypt.compare(currentPassword, user.password);
-    if (!valid) return res.json({ error: "Current password is incorrect" });
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
-    await user.save();
-
-    res.json({ message: "Password updated successfully" });
-  } catch (err) {
-    res.json({ error: "Error updating password" });
-  }
-});
-
-app.post("/auth/delete-account", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user) return res.json({ error: "User not found" });
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.json({ error: "Incorrect password" });
-
-    await User.deleteOne({ username });
-    await Upload.deleteMany({ username });
-
-    res.json({ message: "Account deleted successfully" });
-  } catch (err) {
-    res.json({ error: "Error deleting account" });
-  }
-});
-
-// === Upload Bot ===
-app.post("/upload", upload.fields([{ name: "zipFile" }, { name: "logo" }]), async (req, res) => {
-  try {
-    const { username, botName, botRepo, botFile, description } = req.body;
-    const zipFile = req.files["zipFile"] ? req.files["zipFile"][0].filename : null;
-    const logo = req.files["logo"] ? req.files["logo"][0].filename : null;
-
-    const newUpload = new Upload({
-      username,
-      botName,
-      botRepo,
-      botFile,
-      zipFile,
-      logo,
-      description,
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
 
-    await newUpload.save();
-    res.json({ message: "Upload successful" });
+    res.json({ message: "Login successful", token, username: user.username });
   } catch (err) {
-    res.json({ error: "Upload failed" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// === Get Uploads for Dashboard ===
-app.get("/uploads", async (req, res) => {
-  try {
-    const uploads = await Upload.find();
-    res.json(uploads);
-  } catch (err) {
-    res.json({ error: "Failed to fetch uploads" });
-  }
-});
-
-// === Start Server ===
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

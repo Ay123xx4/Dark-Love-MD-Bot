@@ -1,57 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Verify Email</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verify Email • Dark-Love-MD</title>
+  <style>
+    /* ====== Page Layout ====== */
+    :root{
+      --bg:#0f1216;
+      --card:#151a21;
+      --text:#eef2f7;
+      --muted:#9aa3af;
+      --accent:#6aa9ff;
+      --accent-strong:#4e8ff2;
+      --ok:#10b981;
+      --danger:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8fb;
+        --card:#ffffff;
+        --text:#0f172a;
+        --muted:#606b7a;
+        --accent:#2f6df6;
+        --accent-strong:#245be0;
+        --shadow: 0 12px 30px rgba(2,6,23,.08);
+      }
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    /* ====== Card ====== */
+    .card{
+      width:100%; max-width:460px; background:var(--card); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:28px; position:relative; overflow:hidden;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; margin-bottom:10px;
+    }
+    .logo{
+      width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+      background:linear-gradient(135deg, var(--accent), #00d4ff); color:white; font-weight:800;
+      box-shadow:0 6px 18px rgba(46,128,255,.25);
+      letter-spacing:0.5px;
+    }
+    h1{font-size:20px; margin:0}
+    p.sub{
+      margin:4px 0 18px; color:var(--muted); font-size:14px; line-height:1.5;
+    }
+
+    /* ====== Verify Form ====== */
+    form{ display:flex; flex-direction:column; gap:14px; margin-top:4px;}
+    .field{
+      display:flex; flex-direction:column; gap:8px;
+    }
+    label{ font-size:13px; color:var(--muted); }
+    input[type="text"]{
+      background:#0e1319; color:var(--text); border:1px solid #1f2835;
+      padding:14px 14px; border-radius:12px; font-size:16px; outline:none;
+      transition:border .15s ease, box-shadow .15s ease;
+    }
+    @media (prefers-color-scheme: light){
+      input[type="text"]{ background:#f8fafc; border-color:#e5e7eb; }
+    }
+    input[type="text"]:focus{
+      border-color: var(--accent);
+      box-shadow:0 0 0 4px rgba(77,136,255,.15);
+    }
+    .hint{
+      font-size:12px; color:var(--muted);
+    }
+    .actions{
+      display:flex; gap:10px; margin-top:8px;
+    }
+    button{
+      appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:600; cursor:pointer;
+      background: var(--accent); color:white; font-size:15px;
+      transition: transform .06s ease, background .15s ease, box-shadow .15s ease;
+      box-shadow: 0 8px 18px rgba(77,136,255,.25);
+    }
+    button:hover{ background: var(--accent-strong); }
+    button:active{ transform: translateY(1px); }
+    .ghost{
+      background: transparent; color: var(--muted); box-shadow:none; border:1px dashed #273142;
+    }
+    .row{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px;
+    }
+    a{ color:var(--accent); text-decoration:none; font-weight:600 }
+    a:hover{ text-decoration:underline; }
+
+    /* ====== Popbox ====== */
+    .popbox{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.5); z-index:1000; padding:22px;
+    }
+    .popbox-content{
+      width:100%; max-width:380px; background:#fff; color:#111827;
+      border-radius:16px; padding:22px; box-shadow:0 18px 40px rgba(0,0,0,.25);
+      text-align:center;
+    }
+    .popbox-content h3{ margin:0 0 8px; font-size:18px; }
+    .popbox-content p{ margin:0 0 16px; color:#374151; }
+    .popbox-content .ok{
+      background:#111827; color:#fff; border:0; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer;
+    }
+
+    /* Status pills */
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700;
+    }
+    .pill.pending{ background:#334155; color:#e5e7eb; }
+    .pill.success{ background:#dcfce7; color:#065f46; }
+    .pill.error{ background:#fee2e2; color:#991b1b; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Email Verification</h2>
-    <form id="verifyForm">
-      <input type="email" id="email" placeholder="Enter your email" required><br>
-      <input type="text" id="code" placeholder="Enter verification code" required><br>
-      <button type="submit">Verify</button>
+  <div class="card">
+    <div class="brand">
+      <div class="logo">DM</div>
+      <div>
+        <h1>Verify your Email</h1>
+        <p class="sub">Enter the 6-digit code we sent to your email to activate your account.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <span id="emailBadge" class="pill pending">Waiting for email…</span>
+      <a href="signup.html">Use a different email</a>
+    </div>
+
+    <form id="verifyForm" autocomplete="one-time-code">
+      <div class="field">
+        <label for="code">Verification code</label>
+        <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               placeholder="Enter 6-digit code" required />
+        <div class="hint">The code expires soon. Check spam if you don’t see it.</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Verify</button>
+        <button type="button" class="ghost" id="resendBtn">Resend</button>
+      </div>
     </form>
   </div>
 
   <!-- Popbox -->
-  <div id="popbox" class="popbox">
+  <div id="popbox" class="popbox" role="dialog" aria-modal="true" aria-labelledby="popTitle">
     <div class="popbox-content">
-      <p id="popboxMessage"></p>
-      <button onclick="closePopbox()">OK</button>
+      <h3 id="popTitle">Message</h3>
+      <p id="popMsg">Text</p>
+      <button class="ok" onclick="closePopbox()">OK</button>
     </div>
   </div>
 
 <script>
-const backendURL = "https://dark-love-md-bot-2.onrender.com";
+  // === Configure your backend URL (Render) ===
+  const backendURL = "https://dark-love-md-bot-2.onrender.com";
 
-document.getElementById("verifyForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value;
-  const code = document.getElementById("code").value;
+  // === Helpers: popbox ===
+  function showPopbox(message, title = "Message") {
+    document.getElementById("popTitle").textContent = title;
+    document.getElementById("popMsg").textContent = message;
+    document.getElementById("popbox").style.display = "flex";
+  }
+  function closePopbox() {
+    document.getElementById("popbox").style.display = "none";
+  }
 
-  const res = await fetch(`${backendURL}/auth/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, code }),
+  // === Get email from localStorage set during signup ===
+  const pendingEmail = localStorage.getItem("pendingEmail");
+  const emailBadge = document.getElementById("emailBadge");
+
+  if (!pendingEmail) {
+    emailBadge.textContent = "No pending email";
+    emailBadge.className = "pill error";
+    showPopbox("No signup email found. Please sign up again to receive a verification code.", "No Email");
+  } else {
+    emailBadge.textContent = pendingEmail;
+    emailBadge.className = "pill pending";
+  }
+
+  // === Submit code to backend ===
+  document.getElementById("verifyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pendingEmail) return;
+
+    const code = (document.getElementById("code").value || "").trim();
+    if (code.length !== 6 || !/^[0-9]+$/.test(code)) {
+      showPopbox("Please enter the 6-digit code sent to your email.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${backendURL}/auth/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code })
+      });
+      const data = await res.json();
+
+      if (data && data.message) {
+        emailBadge.textContent = "Verified";
+        emailBadge.className = "pill success";
+        showPopbox("Email verified successfully.", "Success");
+        // Clear the pending email and send the user to login
+        localStorage.removeItem("pendingEmail");
+        setTimeout(() => window.location.href = "index.html", 1200);
+      } else {
+        showPopbox(data?.error || "Code incorrect. Please try again.", "Code Incorrect");
+      }
+    } catch (err) {
+      showPopbox("Network error. Please try again.", "Error");
+    }
   });
 
-  const data = await res.json();
-  showPopbox(data.message || data.error);
-
-  if (data.message) {
-    setTimeout(() => window.location.href = "index.html", 2000);
-  }
-});
-
-function showPopbox(msg) {
-  document.getElementById("popboxMessage").innerText = msg;
-  document.getElementById("popbox").style.display = "flex";
-}
-function closePopbox() {
-  document.getElementById("popbox").style.display = "none";
-}
+  // === Resend code ===
+  document.getElementById("resendBtn").addEventListener("click", async () => {
+    if (!pendingEmail) {
+      showPopbox("No email to resend to. Please sign up again.");
+      return;
+    }
+    try {
+      const res = await fetch(`${backendURL}/auth/resend-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail })
+      });
+      const data = await res.json();
+      if (data && data.message) {
+        showPopbox("A new verification code has been sent to your email.", "Code Resent");
+      } else {
+        showPopbox(data?.error || "Unable to resend code. Try again later.", "Error");
+      }
+    } catch (err) {
+      showPopbox("Network error. Please try again.", "Error");
+    }
+  });
 </script>
 </body>
 </html>

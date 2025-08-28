@@ -2,67 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dark-Love-MD - Login</title>
+  <title>Dark-Love-MD | Login</title>
   <link rel="stylesheet" href="style2.css">
 </head>
 <body>
+  <header>
+    Dark-Love-MD
+    <div class="logo">Secure Login</div>
+  </header>
+
   <div class="form-container">
-    <h2>Dark-Love-MD Login</h2>
-    <form id="loginForm" class="form-box">
-      <input type="text" name="username" placeholder="Username" required><br>
-      <input type="password" name="password" placeholder="Password" required><br>
-      <button type="submit" class="btn">Login</button>
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Login</button>
     </form>
     <p>Don’t have an account? <a href="signup.html">Signup</a></p>
   </div>
 
+  <!-- Popbox -->
+  <div id="popbox" class="popbox">
+    <div class="popbox-content">
+      <p id="popbox-message"></p>
+      <button onclick="closePopbox()">OK</button>
+    </div>
+  </div>
+
   <script>
-    const backend = "https://dark-love-md-bot-2.onrender.com";
+    const form = document.getElementById("loginForm");
 
-    // Redirect if already logged in
-    if (localStorage.getItem("username")) {
-      window.location.href = "dashboard.html";
-    }
-
-    // Popbox function
-    function showPopbox(message, callback) {
-      const box = document.createElement("div");
-      box.className = "popbox";
-      box.innerHTML = `
-        <p>${message}</p>
-        <button id="okBtn">OK</button>
-      `;
-      document.body.appendChild(box);
-
-      document.getElementById("okBtn").onclick = () => {
-        document.body.removeChild(box);
-        if (callback) callback();
-      };
-    }
-
-    // Handle login form
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const body = Object.fromEntries(formData.entries());
 
-      const res = await fetch(`${backend}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
 
-      const data = await res.json();
-      if (data.error) return showPopbox(data.error);
+      try {
+        const res = await fetch("https://your-backend.onrender.com/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+          credentials: "include"
+        });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username);
+        const data = await res.json();
+        showPopbox(data.message);
 
-      showPopbox("Login successful", () => {
-        window.location.href = "dashboard.html";
-      });
+        if (res.ok) {
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 1500);
+        }
+      } catch (err) {
+        showPopbox("Server error");
+      }
     });
+
+    function showPopbox(msg) {
+      document.getElementById("popbox-message").textContent = msg;
+      document.getElementById("popbox").style.display = "flex";
+    }
+
+    function closePopbox() {
+      document.getElementById("popbox").style.display = "none";
+    }
   </script>
 </body>
 </html>
-

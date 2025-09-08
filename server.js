@@ -1,118 +1,130 @@
 import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import cors from "cors";
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
 
 dotenv.config();
-
 const app = express();
-app.use(express.json());
+
 app.use(cors());
+app.use(express.json()); // Make sure body parsing works
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// MongoDB Connection
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// User schema
+// User Schema
 const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  password: String,
-  isVerified: { type: Boolean, default: false },
-  verificationCode: String,
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  verified: { type: Boolean, default: false },
+  verificationCode: { type: String },
 });
 
 const User = mongoose.model("User", userSchema);
 
-// Nodemailer setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
+// Root Route (Fix for "Cannot GET /")
+app.get("/", (req, res) => {
+  res.send("🚀 Dark-Love-MD Backend Running Successfully!");
 });
 
-// Signup
-app.post("/api/auth/signup", async (req, res) => {
-  const { username, email, password } = req.body;
-
+// Signup Route
+app.post("/signup", async (req, res) => {
   try {
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Email already exists" });
+    const { username, email, password } = req.body;
+
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const user = new User({
+    const newUser = new User({
       username,
       email,
       password: hashedPassword,
       verificationCode,
     });
 
-    await user.save();
+    await newUser.save();
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Verify your email",
-      text: `Your verification code is ${verificationCode}`,
+      subject: "Verify your account",
+      text: `Your verification code is: ${verificationCode}`,
     });
 
-    res.status(201).json({ message: "User registered. Please verify your email." });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    res.json({ success: true, message: "Signup successful! Check your email for the verification code." });
+  } catch (error) {
+    console.error("❌ Signup Error:", error);
+    res.status(500).json({ success: false, message: "Server error during signup" });
   }
 });
 
-// Verify Email
-app.post("/api/auth/verify", async (req, res) => {
-  const { code } = req.body;
-
+// Verify Route
+app.post("/verify", async (req, res) => {
   try {
-    const user = await User.findOne({ verificationCode: code });
-    if (!user) return res.status(400).json({ message: "Invalid code" });
+    const { email, code } = req.body;
 
-    user.isVerified = true;
-    user.verificationCode = null;
-    await user.save();
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ success: false, message: "User not found" });
 
-    res.json({ message: "Email verified successfully!" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    if (user.verificationCode === code) {
+      user.verified = true;
+      user.verificationCode = null;
+      await user.save();
+      return res.json({ success: true, message: "Email verified successfully" });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid verification code" });
+    }
+  } catch (error) {
+    console.error("❌ Verify Error:", error);
+    res.status(500).json({ success: false, message: "Server error during verification" });
   }
 });
 
-// Login
-app.post("/api/auth/login", async (req, res) => {
-  const { username, password } = req.body;
-
+// Login Route (Fix for "Server Error")
+app.post("/login", async (req, res) => {
   try {
+    const { username, password } = req.body;
+
     const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
-    if (!user.isVerified) {
-      return res.status(403).json({ message: "Please verify your email first" });
+    if (!user.verified) {
+      return res.status(403).json({ success: false, message: "Please verify your email first" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.json({ message: "Login successful", token, username: user.username });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    res.json({ success: true, message: "Login successful", user: { username: user.username, email: user.email } });
+  } catch (error) {
+    console.error("❌ Login Error:", error);
+    res.status(500).json({ success: false, message: "Server error during login" });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+// Start Server
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));

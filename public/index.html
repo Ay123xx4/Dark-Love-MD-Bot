@@ -2,69 +2,68 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dark-Love-MD | Login</title>
-  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    Dark-Love-MD
-    <div class="logo">Secure Login</div>
-  </header>
-
-  <div class="form-container">
+  <div class="container">
+    <h1 class="header">Dark-Love-MD</h1>
     <h2>Login</h2>
     <form id="loginForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required>
-
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
-
+      <input type="text" id="username" name="username" placeholder="Username" required><br>
+      <input type="password" id="password" name="password" placeholder="Password" required><br>
       <button type="submit">Login</button>
     </form>
-    <p>Don’t have an account? <a href="signup.html">Signup</a></p>
+    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
   </div>
 
   <!-- Popbox -->
   <div id="popbox" class="popbox">
     <div class="popbox-content">
-      <p id="popbox-message"></p>
+      <p id="popboxMessage"></p>
       <button onclick="closePopbox()">OK</button>
     </div>
   </div>
 
   <script>
-    const form = document.getElementById("loginForm");
+    const backendUrl = "https://dark-love-md-bot-2.onrender.com"; // Render backend URL
 
-    form.addEventListener("submit", async (e) => {
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       try {
-        const res = await fetch("https://dark-love-md-bot-2.onrender.com/api/auth/login", {
+        const res = await fetch(`${backendUrl}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
-          credentials: "include"
         });
 
         const data = await res.json();
+
         showPopbox(data.message);
 
-        if (res.ok) {
+        if (data.success) {
+          // Save username to localStorage so dashboard can use it
+          localStorage.setItem("username", data.user.username);
+
+          // Redirect after short delay
           setTimeout(() => {
             window.location.href = "dashboard.html";
           }, 1500);
         }
-      } catch (err) {
-        showPopbox("Server error");
+      } catch (error) {
+        showPopbox("Server error. Please try again later.");
+        console.error("Login Error:", error);
       }
     });
 
-    function showPopbox(msg) {
-      document.getElementById("popbox-message").textContent = msg;
+    function showPopbox(message) {
+      document.getElementById("popboxMessage").innerText = message;
       document.getElementById("popbox").style.display = "flex";
     }
 
@@ -74,7 +73,3 @@
   </script>
 </body>
 </html>
-
-
-
-

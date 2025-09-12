@@ -45,20 +45,21 @@
 
         const data = await res.json();
 
-        showPopbox(data.message);
+        // Popbox always shows backend message
+        showPopbox(data.message || "Unexpected error");
 
         if (data.success) {
-          // Save username to localStorage so dashboard can use it
+          // Save username for dashboard
           localStorage.setItem("username", data.user.username);
 
-          // Redirect after short delay
+          // Redirect after a short delay
           setTimeout(() => {
             window.location.href = "dashboard.html";
           }, 1500);
         }
-      } catch (error) {
-        showPopbox("Server error. Please try again later.");
-        console.error("Login Error:", error);
+      } catch (err) {
+        console.error("Login error:", err);
+        showPopbox("Server error. Try again.");
       }
     });
 

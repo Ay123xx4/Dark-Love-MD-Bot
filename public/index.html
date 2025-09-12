@@ -4,18 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dark-Love-MD | Login</title>
-  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1 class="header">Dark-Love-MD</h1>
+    <header class="main-header">
+      <h1>Dark-Love-MD</h1>
+      <div class="logo-space">[Logo]</div>
+    </header>
+
     <h2>Login</h2>
     <form id="loginForm">
-      <input type="text" id="username" name="username" placeholder="Username" required><br>
-      <input type="password" id="password" name="password" placeholder="Password" required><br>
+      <div class="form-group">
+        <input type="text" id="username" name="username" placeholder="Username" required>
+      </div>
+      <div class="form-group">
+        <input type="password" id="password" name="password" placeholder="Password" required>
+      </div>
       <button type="submit">Login</button>
     </form>
-    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+
+    <p>Don’t have an account? <a href="signup.html">Create an account</a></p>
   </div>
 
   <!-- Popbox -->
@@ -27,10 +36,9 @@
   </div>
 
   <script>
-    const backendUrl = "https://dark-love-md-bot-2.onrender.com"; // Render backend URL
+    const backendUrl = "https://dark-love-md-bot-2.onrender.com"; // your backend on Render
 
-    const loginForm = document.getElementById("loginForm");
-    loginForm.addEventListener("submit", async (e) => {
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const username = document.getElementById("username").value.trim();
@@ -40,25 +48,25 @@
         const res = await fetch(`${backendUrl}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ username, password })
         });
 
         const data = await res.json();
 
-        // Popbox always shows backend message
+        // Always show response in popbox
         showPopbox(data.message || "Unexpected error");
 
         if (data.success) {
-          // Save username for dashboard
+          // Save username
           localStorage.setItem("username", data.user.username);
 
-          // Redirect after a short delay
+          // Redirect to dashboard
           setTimeout(() => {
             window.location.href = "dashboard.html";
           }, 1500);
         }
-      } catch (err) {
-        console.error("Login error:", err);
+      } catch (error) {
+        console.error(error);
         showPopbox("Server error. Try again.");
       }
     });
@@ -74,4 +82,3 @@
   </script>
 </body>
 </html>
-

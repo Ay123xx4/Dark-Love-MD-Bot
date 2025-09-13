@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dark-Love-MD | Login</title>
-  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -36,7 +36,8 @@
   </div>
 
   <script>
-    const backendUrl = "https://dark-love-md-bot-2.onrender.com"; // your backend on Render
+    // ✅ Make sure this matches your Render backend
+    const backendUrl = "https://dark-love-md-bot-2.onrender.com";
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -53,21 +54,18 @@
 
         const data = await res.json();
 
-        // Always show response in popbox
+        // ✅ Always show response in popbox
         showPopbox(data.message || "Unexpected error");
 
         if (data.success) {
-          // Save username
           localStorage.setItem("username", data.user.username);
-
-          // Redirect to dashboard
           setTimeout(() => {
             window.location.href = "dashboard.html";
           }, 1500);
         }
       } catch (error) {
         console.error(error);
-        showPopbox("Server error. Try again.");
+        showPopbox("Server error. Please try again later.");
       }
     });
 
@@ -82,4 +80,3 @@
   </script>
 </body>
 </html>
-

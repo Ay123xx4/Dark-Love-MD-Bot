@@ -1,38 +1,46 @@
 import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import cors from "cors";
-import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+import cors from "cors";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// ✅ MongoDB Connection
+// Serve frontend static files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, "public")));
+
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Error:", err));
+  .catch((err) => console.log("❌ MongoDB Error:", err));
 
-// ✅ User Schema
+// Define User Schema
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  username: String,
+  email: String,
+  password: String,
   verified: { type: Boolean, default: false },
-  verificationCode: { type: String },
+  verificationCode: String,
 });
 
 const User = mongoose.model("User", userSchema);
 
-// ✅ Nodemailer Transport
+// Configure email transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -41,23 +49,33 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ Signup Route
+// ✅ SIGNUP ROUTE (fixed to allow different email or username)
 app.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    // Allow signup if either username OR email is different
+    const existingUser = await User.findOne({ username, email });
+
     if (existingUser) {
-      return res.json({ success: false, message: "Username or Email already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "Account with this username and email already exists",
+      });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // Generate a 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    // Save user with verified = false
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
+      verified: false,
       verificationCode,
     });
 
@@ -65,76 +83,99 @@ app.post("/signup", async (req, res) => {
 
     // Send verification email
     await transporter.sendMail({
-      from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: "Verify your email",
-      text: `Your verification code is ${verificationCode}`,
+      subject: "Dark-Love-MD Email Verification",
+      text: `Hello ${username}, your verification code is: ${verificationCode}`,
     });
 
-    res.json({ success: true, message: "Signup successful. Verification code sent to email." });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ success: false, message: "Server error during signup" });
+    return res.status(200).json({
+      success: true,
+      message: "Email verification code sent",
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error during signup" });
   }
 });
 
-// ✅ Verify Route
+// ✅ VERIFY ROUTE
 app.post("/verify", async (req, res) => {
   try {
     const { code } = req.body;
 
     const user = await User.findOne({ verificationCode: code });
+
     if (!user) {
-      return res.json({ success: false, message: "Code incorrect" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Code incorrect" });
     }
 
     user.verified = true;
     user.verificationCode = null;
     await user.save();
 
-    res.json({ success: true, message: "Email verified successfully" });
-  } catch (error) {
-    console.error("Verify error:", error);
-    res.status(500).json({ success: false, message: "Server error during verification" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
+  } catch (err) {
+    console.error("Verification error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error during verification" });
   }
 });
 
-// ✅ Login Route
+// ✅ LOGIN ROUTE (unchanged, with better feedback)
 app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
-    if (!user) return res.json({ success: false, message: "Credentials failed" });
-
-    if (!user.verified) {
-      return res.json({ success: false, message: "Please verify your email first" });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.json({ success: false, message: "Credentials failed" });
+    if (!user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Please verify your email before logging in",
+      });
+    }
 
-    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
+    }
 
-    res.json({ success: true, message: "Login successful", token, username: user.username });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Server error during login" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Login successful", user });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error during login" });
   }
 });
 
-// ✅ Example Protected Route
-app.get("/dashboard", (req, res) => {
-  res.json({ message: "Welcome to the dashboard!" });
-});
-
-// ✅ Root Route to Fix "Cannot GET /"
+// ✅ ROOT ROUTE
 app.get("/", (req, res) => {
-  res.send("✅ Dark-Love-MD Backend is running.");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ✅ Start Server
+// ✅ Handle 404 routes
+app.use((req, res) => {
+  res.status(404).send("404 - Page Not Found");
+});
+
+// Start server
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

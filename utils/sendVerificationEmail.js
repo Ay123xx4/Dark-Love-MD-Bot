@@ -10,7 +10,7 @@ export const sendVerificationEmail = async (email, token) => {
       }
     });
 
-    const verificationUrl = `https://dark-love-md-bot-2.onrender.com/api/auth/verify/${token}`;
+    const verificationUrl = `https://dark-love-md-bot-production.up.railway.app/api/auth/verify/${token}`;
 
     await transporter.sendMail({
       from: `"Dark Love MD" <${process.env.EMAIL_USER}>`,

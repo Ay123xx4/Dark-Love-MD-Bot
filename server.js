@@ -2,28 +2,38 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
+import nodemailer from "nodemailer";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 const app = express();
+const PORT = process.env.PORT || 8080;
 
-// === Middleware ===
+// 🔧 Serve static frontend if needed
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Middlewares
+app.use(cors());
 app.use(express.json());
-app.use(cors({
-  origin: "https://dark-love-md.vercel.app", // your frontend domain
-  credentials: true,
-}));
+app.use(express.static(path.join(__dirname, "public")));
 
-// === MongoDB Connection ===
-mongoose.connect(process.env.MONGODB_URI || "your_mongodb_connection_string", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("MongoDB Connection Error:", err));
+// ✅ MongoDB Connection with Safety Checks
+const MONGO_URI = process.env.MONGO_URI?.trim();
+if (!MONGO_URI) {
+  console.error("❌ ERROR: MongoDB URI is missing. Please set MONGO_URI in environment variables.");
+} else if (!MONGO_URI.startsWith("mongodb://") && !MONGO_URI.startsWith("mongodb+srv://")) {
+  console.error("❌ ERROR: Invalid MongoDB URI scheme. It must start with mongodb:// or mongodb+srv://");
+} else {
+  mongoose
+    .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("✅ MongoDB Connected"))
+    .catch((err) => console.error("MongoDB Connection Error:", err.message));
+}
 
-// === Schema ===
+// ✅ Schemas
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
@@ -34,7 +44,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// === Email Transporter ===
+// ✅ Email setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -43,106 +53,101 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// === ROUTES ===
+// ✅ Routes
+app.get("/", (req, res) => {
+  res.send("✅ Dark-Love-MD Backend is Live and Working!");
+});
 
-// 🟢 SIGNUP
-app.post("/api/signup", async (req, res) => {
+// 🟢 Signup Route
+app.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // check if email OR username already exists and is verified
+    // Check for existing email or username
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
 
-    if (existingUser && existingUser.verified) {
-      return res.status(400).json({ message: "Username or email already exists!" });
+    if (existingUser) {
+      return res.json({ success: false, message: "Username or email already exists" });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // create or update user record
-    const user = existingUser
-      ? await User.findOneAndUpdate(
-          { email },
-          { username, password: hashedPassword, verificationCode, verified: false },
-          { new: true }
-        )
-      : await User.create({
-          username,
-          email,
-          password: hashedPassword,
-          verificationCode,
-        });
-
-    // send email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Dark-Love-MD Email Verification Code",
-      text: `Your verification code is: ${verificationCode}`,
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      verificationCode,
+      verified: false,
     });
 
-    res.json({ message: "Email verification code sent!" });
-  } catch (error) {
-    console.error("Signup Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    await newUser.save();
+
+    // Send verification code to email
+    await transporter.sendMail({
+      from: `"Dark-Love-MD" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Email Verification Code",
+      text: `Your verification code is ${verificationCode}`,
+    });
+
+    res.json({
+      success: true,
+      message: "Email verification code sent!",
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Server error during signup" });
   }
 });
 
-// 🟢 VERIFY EMAIL
-app.post("/api/verify", async (req, res) => {
+// 🟢 Verify Route
+app.post("/verify", async (req, res) => {
   try {
-    const { code } = req.body;
+    const { email, code } = req.body;
+    const user = await User.findOne({ email });
 
-    const user = await User.findOne({ verificationCode: code });
-
-    if (!user) return res.status(400).json({ message: "Invalid verification code" });
+    if (!user) return res.json({ success: false, message: "User not found" });
+    if (user.verificationCode !== code)
+      return res.json({ success: false, message: "Invalid verification code" });
 
     user.verified = true;
     user.verificationCode = null;
     await user.save();
 
-    res.json({ message: "Email verified successfully!" });
-  } catch (error) {
-    console.error("Verify Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.json({ success: true, message: "Email verified successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Verification failed" });
   }
 });
 
-// 🟢 LOGIN
-app.post("/api/login", async (req, res) => {
+// 🟢 Login Route
+app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-
     const user = await User.findOne({ username });
 
-    if (!user)
-      return res.status(400).json({ message: "Invalid username or password" });
+    if (!user) return res.json({ success: false, message: "Invalid username or password" });
+    if (!user.verified) return res.json({ success: false, message: "Email not verified" });
 
-    if (!user.verified)
-      return res.status(400).json({ message: "Email not verified" });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.json({ success: false, message: "Invalid username or password" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid username or password" });
-
-    res.json({ message: "Login successful", username: user.username });
-  } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.json({
+      success: true,
+      message: "Login successful",
+      username: user.username,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Server error during login" });
   }
 });
 
-// === TEST ROUTE ===
-app.get("/", (req, res) => {
-  res.send("✅ Dark-Love-MD Backend is Live and Working!");
+// ✅ Start Server
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
-
-// === START SERVER ===
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));

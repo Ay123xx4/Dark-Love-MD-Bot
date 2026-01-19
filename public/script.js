@@ -1,4 +1,4 @@
-const API_BASE = "https://dark-love-md-bot-production.up.railway.app/";
+const API_BASE = "https://dark-love-md-bot-surb.onrender.com/";
 
 // 🌙 Dark/Light Mode Toggle
 document.addEventListener("DOMContentLoaded", () => {
